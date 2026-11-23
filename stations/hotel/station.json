@@ -1,0 +1,58 @@
+{
+ "key": "hotel",
+ "name": "Passive plate hotel",
+ "order": 7,
+ "status": "nothing_to_decode",
+ "status_line": "No controller, so nothing to decode. In PyLabRobot it is a resource: plate holders on a carrier.",
+ "reaches": "Nothing to reach: no wire. Software keeps a model of what sits on each shelf (PyLabRobot resources) and the arm that loads it is the only actor. The scheduler owns reservations and timers.",
+ "decoded_from": "Nothing decoded. PyLabRobot 182f92e has no hotel class; the example uses a PlateCarrier (pylabrobot/resources/carrier.py:269-331) with 24 PlateHolder sites (pylabrobot/resources/carrier.py:159-211). Assigning to a taken spot raises ValueError (pylabrobot/resources/carrier.py:79-87).",
+ "steps_title": "Stand it up",
+ "steps": [
+  "Measure the shelf pitch, the first shelf height and the plate seat; put them in a PlateCarrier of PlateHolder sites.",
+  "Set pedestal_size_z for each PlateHolder; the constructor raises ValueError without it (pylabrobot/resources/carrier.py:184-189).",
+  "Place with hotel[slot] = plate and remove with hotel[slot] = None, so a taken spot raises instead of stacking (pylabrobot/resources/carrier.py:104-111).",
+  "Keep reservations and dwell timers in the scheduler, with a clock you can inject in tests.",
+  "Free a slot only after the arm confirms the pickup; an unconfirmed pickup keeps the slot reserved.",
+  "Teach the arm 1 pose per shelf and check each against the model before the first run."
+ ],
+ "scenario": "Reserve shelf 5, place 1 skirted 384-well assay plate, wait a 600 s dwell on a simulated clock, pick it up, free the shelf. Sizes, pitch and dwell are made up.",
+ "real": [
+  "Upstream PlateCarrier, PlateHolder and Plate classes",
+  "The ValueError raised for a taken spot",
+  "An upstream 384-well plate definition (Greiner 784075)"
+ ],
+ "simulated": [
+  "The clock",
+  "What is physically on each shelf",
+  "The arm's place and pickup confirmations"
+ ],
+ "not_checked": [
+  "Any physical hotel or its dimensions",
+  "The arm poses per shelf"
+ ],
+ "limits": [
+  "lost_reply maps to a pickup with no confirmation; device_error maps to placing into a taken spot (pylabrobot/resources/carrier.py:86).",
+  "Only hotel[slot] = plate refuses a taken spot. PlateHolder.assign_child_resource defaults to reassign=True (pylabrobot/resources/carrier.py:195-211), and then adds a 2nd plate with no error (pylabrobot/resources/resource_holder.py:74-76).",
+  "PlateHolder refuses non-skirted plates (pylabrobot/resources/carrier.py:209-210) and needs pedestal_size_z (pylabrobot/resources/carrier.py:184-189).",
+  "No reservations or timers in pylabrobot/resources; the scheduler in drive.py is this example's own code."
+ ],
+ "upstream_paths": [
+  "pylabrobot/resources/carrier.py",
+  "pylabrobot/resources/resource_holder.py",
+  "pylabrobot/resources/greiner/plates.py"
+ ],
+ "sources": [
+  [
+   "carrier.py",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/carrier.py"
+  ],
+  [
+   "resource_holder.py",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/resource_holder.py"
+  ],
+  [
+   "greiner/plates.py (384-well plate used)",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/greiner/plates.py"
+  ]
+ ]
+}

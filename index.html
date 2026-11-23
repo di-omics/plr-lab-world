@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body>
+<title>Reverse Engineering the Hall</title>
+<style>
+/* Layout: 1 quiet column on pure white. Type only. Code and tables scroll inside their own boxes. */
+:root{--paper:#ffffff;--ink:#111111;--soft:#62666b;--hair:#e3e3e1;--wash:#f6f6f4;
+--sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
+--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weight:300;
+font-size:17px;line-height:1.55;margin:0;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding-block:72px 120px;
+padding-left:max(16px,env(safe-area-inset-left,0px));
+padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:var(--ink);text-decoration-color:var(--hair);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ink)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+h1{font-weight:200;font-size:clamp(36px,7vw,64px);line-height:1.04;letter-spacing:-0.02em;
+margin:0 0 20px;text-wrap:balance}
+h2{font-weight:200;font-size:clamp(28px,4.6vw,40px);line-height:1.1;letter-spacing:-0.015em;
+margin:0 0 10px;text-wrap:balance}
+h3{font-weight:400;font-size:13px;letter-spacing:0.09em;text-transform:uppercase;
+color:var(--soft);margin:36px 0 10px}
+h4{font-weight:400;font-size:12px;letter-spacing:0.09em;text-transform:uppercase;
+color:var(--soft);margin:0 0 6px}
+p{margin:0 0 14px;max-width:66ch}
+.lede{font-size:21px;line-height:1.4;max-width:34em}
+.small,.sources{font-size:14px;color:var(--soft);max-width:none}
+.eyebrow{font-size:13px;letter-spacing:0.09em;text-transform:uppercase;color:var(--soft);
+margin:0 0 12px}
+.eyebrow span,.sources span,summary span{color:var(--hair);padding:0 6px}
+.lead{font-size:20px;line-height:1.4}
+section{padding-top:88px}
+.station{border-top:1px solid var(--hair);margin-top:88px}
+dl.facts{display:grid;grid-template-columns:minmax(0,13em) minmax(0,1fr);gap:8px 24px;margin:22px 0 0}
+dl.facts dt{color:var(--soft)}
+dl.facts dd{margin:0;min-width:0}
+ol.steps{margin:0;padding-left:1.3em;max-width:66ch}
+ol.steps li{margin:0 0 7px;padding-left:4px}
+ul{margin:0;padding-left:1.1em}
+ul li{margin:0 0 6px}
+.scroll{overflow-x:auto;margin:14px 0 0;background:var(--wash)}
+pre{margin:0;padding:18px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.6;
+font-weight:400;color:var(--ink);white-space:pre}
+details.ran{margin-top:14px}
+details.more{margin-top:2px}
+details.more h3{margin-top:26px}
+button.plain{font:inherit;font-size:14px;color:var(--ink);background:none;border:0;padding:0;
+cursor:pointer;text-decoration:underline;text-decoration-color:var(--hair);text-underline-offset:3px}
+button.plain:hover{text-decoration-color:var(--ink)}
+button.plain:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+summary{cursor:pointer;font-size:15px;padding:8px 0;color:var(--ink)}
+.triple{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin-top:16px;
+font-size:15px;line-height:1.45}
+.triple div{min-width:0}
+.tablebox{overflow-x:auto;margin-top:26px}
+table{border-collapse:collapse;width:100%;font-size:15px;line-height:1.4}
+th{font-weight:400;font-size:12px;letter-spacing:0.09em;text-transform:uppercase;
+color:var(--soft);text-align:left;padding:0 18px 10px 0;white-space:nowrap}
+td{vertical-align:top;padding:11px 18px 11px 0;border-top:1px solid var(--hair)}
+td:first-child{white-space:nowrap}
+td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+ol.method{margin:26px 0 0;padding-left:1.3em;max-width:66ch}
+ol.method li{margin:0 0 14px;padding-left:4px}
+ol.method b{font-weight:400}
+@media (max-width:640px){body{font-size:16px}.triple{grid-template-columns:minmax(0,1fr);gap:20px}
+dl.facts{grid-template-columns:minmax(0,1fr);gap:2px}dl.facts dd{margin:0 0 12px}
+section{padding-top:64px}.station{margin-top:64px}}
+</style>
+<div class="wrap">
+<header>
+<p class="eyebrow">Lab World <span>/</span> instrument integration <span>/</span> Di Hu</p>
+<h1>Reverse engineering the hall</h1>
+<p class="lede">9 stations. For each one: is it already decoded, how does software reach it,
+and what does a first run look like.</p>
+<p class="small">Every run on this page is a simulation. Nothing here ran on a physical instrument.
+Built against the public PyLabRobot source at commit
+<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/" target="_blank" rel="noopener">182f92e</a> of 23 Nov 2026.</p>
+<p class="small"><button class="plain" id="openall" type="button">Open every detail</button></p>
+</header>
+
+<section id="method">
+<h2>The method is the same at every station</h2>
+<ol class="method">
+<li><b>Ask first: is it already decoded?</b> Read the PyLabRobot device registry and source before
+touching the instrument. 3 of these 9 stations already are.</li>
+<li><b>If the maker publishes an interface, use it.</b> An SDK means there is nothing to decode.
+Write 1 small class around it.</li>
+<li><b>If not, extract, don't guess.</b> Capture the maker's own software doing 1 action at a time.
+Get the wire format exact: transport, framing, checksum, handshake.</li>
+<li><b>Write 1 plain class.</b> Its public methods state intent and are safe to repeat:
+read the state, act only if needed, confirm.</li>
+<li><b>Prove it without the instrument.</b> Replay the traffic against the class. Errors keep
+their code. An unverified driver says so when it starts.</li>
+<li><b>The first live command only reads.</b> Then 1 move with empty labware and a person present.</li>
+</ol>
+<p class="small">Steps 3 to 5 follow the PyLabRobot
+<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md" target="_blank" rel="noopener">device
+driver guide</a>. Steps 3 and 6 follow my
+<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/APPROACH.md" target="_blank" rel="noopener">reverse engineering playbook</a>.</p>
+<div class="tablebox"><table>
+<thead><tr><th>Station</th><th>Where it stands</th><th>How software reaches it</th>
+<th>In simulation</th></tr></thead>
+<tbody><tr><td><a href="#culture">Tissue-culture station</a></td><td>Instrument not chosen yet</td><td>Not decided. The example uses a made-up stand-in: 1 JSON message per release, the adapter speaks first, the station acknowledges or refuses. A real adapter would wrap what the chosen supplier documents.</td><td class="n">5 passed</td></tr><tr><td><a href="#seed">Agilent BioTek EL406</a></td><td>Decoded, in PyLabRobot</td><td>FTDI USB, 38400 baud 8N2, no flow control. Host speaks first: 11-byte header (cmd, length, checksum), payload (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/protocol.py#L15-L25" target="_blank" rel="noopener">protocol.py:15-25</a>). Reply: ACK 0x06, header, data (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L318-L319" target="_blank" rel="noopener">el406.py:318-319</a>). Steps polled by 0x92 (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L595" target="_blank" rel="noopener">el406.py:595</a>).</td><td class="n">4 passed</td></tr><tr><td><a href="#star">Hamilton Microlab STAR</a></td><td>Decoded, in PyLabRobot</td><td>USB, VID 0x08AF, PID 0x8000 (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/master.py#L81-L82" target="_blank" rel="noopener">master.py:81-82</a>). The host speaks first: ASCII commands like C0TPid0117xp... Each reply repeats module, command and id, then er00/00 or an error code (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/protocol/text/framing.py#L3-L5" target="_blank" rel="noopener">framing.py:3-5</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/protocol/text/framing.py#L319-L320" target="_blank" rel="noopener">framing.py:319-320</a>).</td><td class="n">6 passed</td></tr><tr><td><a href="#inc">LiCONiC STX44 incubator</a></td><td>Decoded, in PyLabRobot, older interface</td><td>RS-232, 9600 baud 8E1, RTS/CTS (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py#L80-L90" target="_blank" rel="noopener">liconic_backend.py:80-90</a>). Host speaks first: a break, CR answered by CC, then 1 ASCII command per line (ST, RS, RD, WR DMn) ending in CR; replies end CR LF (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py#L96-L139" target="_blank" rel="noopener">liconic_backend.py:96-139</a>).</td><td class="n">4 passed</td></tr><tr><td><a href="#rail">Rail-mounted transfer arm (linear track)</a></td><td>Maker's SDK, nothing to decode</td><td>Through the xArm controller with xarm-python-sdk: the same XArmAPI object as the arm calls get/set_linear_motor_*; the SDK sends them as Modbus to the control box RS-485 (xarm-python-sdk xarm/x3/linear_motor.py:40-46).</td><td class="n">6 passed</td></tr><tr><td><a href="#xarm">UFACTORY xArm 6 plate arm</a></td><td>Maker's SDK, nothing to decode</td><td>Ethernet to the xArm controller through xarm-python-sdk (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/ufactory/xarm6/hello-world.ipynb#L12" target="_blank" rel="noopener">hello-world.ipynb:12</a>). XArmAPI(ip) is created in setup(), then each operation is 1 blocking SDK call run in a thread (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py#L86" target="_blank" rel="noopener">xarm6.py:86</a>).</td><td class="n">7 passed</td></tr><tr><td><a href="#hotel">Passive plate hotel</a></td><td>Nothing to decode</td><td>Nothing to reach: no wire. Software keeps a model of what sits on each shelf (PyLabRobot resources) and the arm that loads it is the only actor. The scheduler owns reservations and timers.</td><td class="n">5 passed</td></tr><tr><td><a href="#reader">BMG LABTECH PHERAstar FSX</a></td><td>Not decoded yet</td><td>Unknown. Upstream's 2 BMG readers share 1 framing module: the CLARIOstar speaks FTDI frames (STX, size, header, payload, 24-bit sum, CR) or USB packets, the VANTAstar USB only. The host asks, then polls status.</td><td class="n">7 passed</td></tr><tr><td><a href="#lcms">Shared LC-MS bench</a></td><td>Nothing to decode</td><td>Rear remote connector: software reads a Ready line and closes a Start contact through opto-isolators (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/instruments/agilent-6530-qtof/README.md#L88-L97" target="_blank" rel="noopener">README.md:88-97</a>). The vendor software holds the method. Raw files are picked up from a data folder.</td><td class="n">5 passed</td></tr></tbody></table></div>
+</section>
+
+<section class="station" id="culture">
+<p class="eyebrow">Station 1 of 9 <span>/</span> Instrument not chosen yet</p>
+<h2>Tissue-culture station</h2>
+<p class="lead">Supplier and interface are still open, so there is no protocol to show yet.</p>
+<dl class="facts">
+<dt>How software reaches it</dt><dd>Not decided. The example uses a made-up stand-in: 1 JSON message per release, the adapter speaks first, the station acknowledges or refuses. A real adapter would wrap what the chosen supplier documents.</dd>
+<dt>Where the commands came from</dt><dd>Nothing decoded and nothing to decode yet. The message format, the error name unknown_batch and the ids are invented for this stand-in (TODO_1: the real interface). The questions below come from the toolkit's APPROACH.md and PREFLIGHT.md.</dd>
+</dl>
+<h3>Decide it</h3>
+<ol class="steps"><li>Does it have an external serial, USB or Ethernet port, so a teardown can be skipped? (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/APPROACH.md#L19-L20" target="_blank" rel="noopener">APPROACH.md:19-20</a>)</li><li>Does the vendor PC app drive it over a link you can mirror and capture, 1 setpoint at a time? (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/APPROACH.md#L71-L82" target="_blank" rel="noopener">APPROACH.md:71-82</a>)</li><li>Is there a Ready, Start and Stop remote connector you could use as a minimal first tier? (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/APPROACH.md#L22-L43" target="_blank" rel="noopener">APPROACH.md:22-43</a>)</li><li>Which commands are read-only telemetry and which actuate, so you can arm them separately? (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/APPROACH.md#L3-L6" target="_blank" rel="noopener">APPROACH.md:3-6</a> and <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/APPROACH.md#L45-L51" target="_blank" rel="noopener">APPROACH.md:45-51</a>)</li><li>Can your software be the sole master with the vendor app closed? (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/APPROACH.md#L92-L93" target="_blank" rel="noopener">APPROACH.md:92-93</a>)</li><li>Which limits and interlocks stay on the instrument, and can you stay out of its internals? (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/APPROACH.md#L5-L6" target="_blank" rel="noopener">APPROACH.md:5-6</a> and <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/PREFLIGHT.md#L7-L8" target="_blank" rel="noopener">PREFLIGHT.md:7-8</a>)</li></ol>
+<h3>The example</h3>
+<p>Release 1 cell batch for seeding and check that the receiving worklist names that batch in every row. Batch and worklist ids are made up.</p>
+<div class="scroll"><pre class="code"><code>adapter = CultureAdapter(station)
+worklist = [{"plate": "seed_plate_1", "well": w, "batch": "CB-0001"}
+            for w in ("A1", "A2", "A3")]
+log("ask   release CB-0001 for seeding against worklist WL-7")
+try:
+  adapter.release("CB-0001", "WL-7", worklist)
+except ReleaseNotConfirmed as e:
+  out.update(outcome="hold", evidence=str(e))
+except ReleaseRefused as e:
+  out.update(outcome="error", evidence=str(e))
+else:
+  out.update(outcome="completed", evidence="CB-0001 released, worklist WL-7 matches")</code></pre></div>
+<details class="ran"><summary>What ran in simulation <span>/</span> 5 tests passed</summary>
+<div class="scroll"><pre><code>ask   release CB-0001 for seeding against worklist WL-7
+send  {"op": "release", "batch": "CB-0001", "worklist": "WL-7"}
+recv  {"ok": true, "batch": "CB-0001"}
+state released {'CB-0001': 'WL-7'}, executed 1
+done  completed: CB-0001 released, worklist WL-7 matches</code></pre></div></details>
+<details class="more"><summary>What is real, what is simulated, and the limits found in the source</summary>
+<div class="triple"><div><h4>Real</h4><ul><li>Nothing from an instrument: no supplier is chosen</li></ul></div><div><h4>Simulated</h4><ul><li>The station, its known batches and its releases</li><li>The stand-in message format and its replies</li></ul></div><div><h4>Not checked</h4><ul><li>Any culture instrument or its interface</li><li>Whether a real station acknowledges releases at all</li></ul></div></div>
+<h3>Limits found in the source</h3><ul><li>lost_reply maps to a release sent with no acknowledgement: hold, never resend (stations/culture/drive.py:37-39).</li><li>device_error maps to the stand-in refusing the release with a made-up error name, unknown_batch (stations/culture/sim.py:37-38).</li><li>Nothing in PyLabRobot 182f92e is used here; the adapter is this example's own code.</li></ul>
+<p class="sources">Sources <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca785916ed117147431490e6dd4b263336b4f/PREFLIGHT.md" target="_blank" rel="noopener">PREFLIGHT.md</a> <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca785916ed117147431490e6dd4b263336b4f/APPROACH.md" target="_blank" rel="noopener">APPROACH.md</a></p>
+</details>
+</section>
+<section class="station" id="seed">
+<p class="eyebrow">Station 2 of 9 <span>/</span> Decoded, in PyLabRobot</p>
+<h2>Agilent BioTek EL406</h2>
+<p class="lead">In PyLabRobot, v1 class EL406, registry status mostly (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json#L120-L122" target="_blank" rel="noopener">devices.json:120-122</a>). Binary frames over FTDI USB.</p>
+<dl class="facts">
+<dt>How software reaches it</dt><dd>FTDI USB, 38400 baud 8N2, no flow control. Host speaks first: 11-byte header (cmd, length, checksum), payload (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/protocol.py#L15-L25" target="_blank" rel="noopener">protocol.py:15-25</a>). Reply: ACK 0x06, header, data (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L318-L319" target="_blank" rel="noopener">el406.py:318-319</a>). Steps polled by 0x92 (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L595" target="_blank" rel="noopener">el406.py:595</a>).</dd>
+<dt>Where the commands came from</dt><dd>The v1 code names no source for the protocol. Legacy wash tests check bytes against reference captures from real EL406 hardware (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/plate_washing/biotek/el406/steps_wash_tests.py#L570-L571" target="_blank" rel="noopener">steps_wash_tests.py:570-571</a>). Some limits are labelled as the vendor GUI's (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/peristaltic_dispenser.py#L176" target="_blank" rel="noopener">peristaltic_dispenser.py:176</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L1015-L1018" target="_blank" rel="noopener">el406.py:1015-1018</a>).</dd>
+</dl>
+<h3>Drive the real one</h3>
+<ol class="steps"><li>Connect the EL406 by USB. setup() opens it as an FTDI device at 38400 baud 8N2, no flow control (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L147-L157" target="_blank" rel="noopener">el406.py:147-157</a>).</li><li>Create EL406(name="el406", device_id=&lt;FTDI serial&gt;); the FTDI layer refuses to pick when several devices match (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/io/ftdi.py#L601-L606" target="_blank" rel="noopener">ftdi.py:601-606</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L84" target="_blank" rel="noopener">el406.py:84</a>).</li><li>await el406.setup(): it sends TEST_COMM 0x73, INIT_STATE 0xA0, then a full RESET 0x70 unless skip_reset=True (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L178-L186" target="_blank" rel="noopener">el406.py:178-186</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L290-L303" target="_blank" rel="noopener">el406.py:290-303</a>).</li><li>el406.set_plate(plate) with the PLR plate really loaded: 96, 384 or 1536 wells only (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L113-L119" target="_blank" rel="noopener">el406.py:113-119</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/helpers.py#L67-L74" target="_blank" rel="noopener">helpers.py:67-74</a>).</li><li>In async with el406.batch(): peristaltic_dispenser.prime(volume=...), .dispense(volumes={col: uL}) (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/peristaltic_dispenser.py#L83-L94" target="_blank" rel="noopener">peristaltic_dispenser.py:83-94</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/peristaltic_dispenser.py#L139-L145" target="_blank" rel="noopener">peristaltic_dispenser.py:139-145</a>).</li><li>await el406.stop(). Check the wells by eye and file the upstream device test report (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/needs-testing.md#L31-L35" target="_blank" rel="noopener">needs-testing.md:31-35</a>).</li></ol>
+<h3>The example</h3>
+<p>Seed cells into a 384-well plate: set up, open a batch, prime the peristaltic lines with 500 uL, dispense 40 uL into every well (24 columns), close the batch. Made-up round volumes.</p>
+<div class="scroll"><pre class="code"><code>el406 = EL406(name="el406")
+el406.io = sim  # the only swap: the FTDI transport becomes the simulator
+tap.ask("set up: FTDI 38400 8N2, TEST_COMM, INIT_STATE, RESET")
+await el406.setup()
+
+plate = cellvis_384_wellplate_120uL_Fb(name="cells_384")
+el406.set_plate(plate)
+tap.ask("open a batch for the 384-well plate")
+async with el406.batch():
+  tap.ask("prime the peristaltic lines, 500 uL")
+  await el406.peristaltic_dispenser.prime(volume=500)
+
+  tap.ask("dispense 40 uL per well, columns 1-24")
+  volumes = {column: 40 for column in range(1, 25)}  # uL per well, by column
+  await el406.peristaltic_dispenser.dispense(volumes=volumes)
+  tap.ask("close the batch: home motors, end-of-batch marker")
+await el406.stop()</code></pre></div>
+<details class="ran"><summary>What ran in simulation <span>/</span> 4 tests passed</summary>
+<div class="scroll"><pre><code>ask   set up: FTDI 38400 8N2, TEST_COMM, INIT_STATE, RESET
+send  3 frames, by command: TEST_COMM INIT_STATE RESET
+recv  3 replies, last: 06 01 02 70 00 01 00 00 00 00 8c ff
+state plate -, batch closed, prime 0 uL, 0 cols at [] uL, err 0x0000
+ask   open a batch for the 384-well plate
+send  7 frames, by command: 0x00bf 0x00c1 0x00f2 0x00f4 0x0154 0x0102 0x010a
+send  01 02 8d 00 01 00 00 01 00 6d ff 01
+recv  8 replies, last: 06 01 02 8d 00 01 00 00 00 00 6f ff
+state plate 384 std, batch open, prime 0 uL, 0 cols at [] uL, err 0x0000
+ask   prime the peristaltic lines, 500 uL
+send  1 frames, by command: STATUS_POLL
+send  01 02 90 00 01 00 00 0b 00 67 fe 01 f4 01 00 00 02 01 00 01 00 00
+send  2 frames, by command: STATUS_POLL STATUS_POLL
+recv  4 replies, last: 06 01 02 92 00 01 00 00 09 00 60 ff 00 00 01 00 00 00 00 00 00
+state plate 384 std, batch open, prime 500 uL, 0 cols at [] uL, err 0x0000
+ask   dispense 40 uL per well, columns 1-24
+send  1 frames, by command: STATUS_POLL
+send  01 02 8f 00 01 00 00 18 00 d2 fb 01 28 00 02 00 00 00 4d 01 0a 00 02 ff ff ff 00 00...
+send  2 frames, by command: STATUS_POLL STATUS_POLL
+recv  4 replies, last: 06 01 02 92 00 01 00 00 09 00 60 ff 00 00 01 00 00 00 00 00 00
+state plate 384 std, batch open, prime 500 uL, 24 cols at [40] uL, err 0x0000
+ask   close the batch: home motors, end-of-batch marker
+send  2 frames, by command: HOME_MOTORS END_OF_BATCH
+recv  2 replies, last: 06 01 02 8c 00 01 00 00 00 00 70 ff
+state plate 384 std, batch closed, prime 500 uL, 24 cols at [40] uL, err 0x0000
+done  completed: sim: 24/24 columns at 40 uL/well, peristaltic pump, plate byte 1 (384 std)</code></pre></div></details>
+<details class="more"><summary>What is real, what is simulated, and the limits found in the source</summary>
+<div class="triple"><div><h4>Real</h4><ul><li>Upstream EL406 class and its peristaltic dispenser, unchanged</li><li>Every frame byte the driver writes, incl. the 0x8F dispense frame</li><li>Error code table and message for 0x1355</li></ul></div><div><h4>Simulated</h4><ul><li>The EL406: frame and checksum decoding, replies, poll states</li><li>Device state: plate type, prime volume, uL per column, steps</li><li>Faults: dropped dispense reply; error 0x1355 in place of the dispense</li></ul></div><div><h4>Not checked</h4><ul><li>Any physical EL406; nothing here ran on hardware</li><li>Real reply header bytes beyond length and command echo (TODO_1)</li><li>Real busy time and post-fault state of a step (TODO_2)</li></ul></div></div>
+<h3>Limits found in the source</h3><ul><li>No tests for the v1 class: pylabrobot/agilent/biotek/el406/ has no *_tests.py; wire tests are legacy only, with a canned MockFTDI (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/plate_washing/biotek/el406/mock_tests.py#L72" target="_blank" rel="noopener">mock_tests.py:72</a>).</li><li>Replies are not checked: the driver reads only the length at header bytes 7-8 and ignores markers and checksum (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L364-L371" target="_blank" rel="noopener">el406.py:364-371</a>).</li><li>batch() first sends 7 unnamed commands (0xBF ... 0x010A) and only logs a warning if they fail (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L724-L731" target="_blank" rel="noopener">el406.py:724-731</a>).</li><li>Docstrings say the plate comes from the plate_holder (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L682" target="_blank" rel="noopener">el406.py:682</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L1021" target="_blank" rel="noopener">el406.py:1021</a>), but only set_plate() sets it (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py#L113-L119" target="_blank" rel="noopener">el406.py:113-119</a>).</li></ul>
+<p class="sources">Sources <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py" target="_blank" rel="noopener">el406.py at 182f92e</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/protocol.py" target="_blank" rel="noopener">protocol.py (framing, checksum)</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/peristaltic_dispenser.py" target="_blank" rel="noopener">peristaltic_dispenser.py</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json" target="_blank" rel="noopener">devices.json registry entry</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/plate_washing/biotek/el406/steps_wash_tests.py" target="_blank" rel="noopener">Legacy wash tests (reference captures)</a></p>
+</details>
+</section>
+<section class="station" id="star">
+<p class="eyebrow">Station 3 of 9 <span>/</span> Decoded, in PyLabRobot</p>
+<h2>Hamilton Microlab STAR</h2>
+<p class="lead">In PyLabRobot. The real STARDriver sends text firmware commands over USB.</p>
+<dl class="facts">
+<dt>How software reaches it</dt><dd>USB, VID 0x08AF, PID 0x8000 (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/master.py#L81-L82" target="_blank" rel="noopener">master.py:81-82</a>). The host speaks first: ASCII commands like C0TPid0117xp... Each reply repeats module, command and id, then er00/00 or an error code (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/protocol/text/framing.py#L3-L5" target="_blank" rel="noopener">framing.py:3-5</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/protocol/text/framing.py#L319-L320" target="_blank" rel="noopener">framing.py:319-320</a>).</dd>
+<dt>Where the commands came from</dt><dd>Upstream does not say how the commands were first obtained. Its code cites the firmware docs (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/protocol/text/framing.py#L38" target="_blank" rel="noopener">framing.py:38</a>), marks some codes as observed, not documented (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/errors.py#L349" target="_blank" rel="noopener">errors.py:349</a>), and its debug page compares PLR commands with VENUS USB trace files (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/hamilton/star/debug.md#L7-L11" target="_blank" rel="noopener">debug.md:7-11</a>).</dd>
+</dl>
+<h3>Drive the real one</h3>
+<ol class="steps"><li>With Python 3.10 or newer, in a virtual environment: pip install "pylabrobot[usb]", which adds pyusb and libusb-package (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/getting-started/installation.md#L3" target="_blank" rel="noopener">installation.md:3</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/getting-started/installation.md#L47" target="_blank" rel="noopener">installation.md:47</a>).</li><li>Connect the STAR by its USB cable. On macOS also install libusb (brew install libusb); on Linux the docs list nothing more (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/getting-started/installation.md#L90-L100" target="_blank" rel="noopener">installation.md:90-100</a>).</li><li>On Windows, with no Hamilton or VENUS software running, use Zadig to give "ML Star" the libusbK driver; restore the original driver for VENUS (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/getting-started/installation.md#L108-L144" target="_blank" rel="noopener">installation.md:108-144</a>).</li><li>STARDriver() with no io opens the USB device itself, VID 0x08AF, PID 0x8000 (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/master.py#L145-L152" target="_blank" rel="noopener">master.py:145-152</a>).</li><li>Build the deck as it stands, then star = STARlet(deck=deck) or STAR(deck=deck). Setup refuses a deck whose track count differs from the device's (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/master.py#L1155-L1171" target="_blank" rel="noopener">master.py:1155-1171</a>).</li><li>await star.setup() reads the device, then initializes it, so it moves (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/master.py#L214" target="_blank" rel="noopener">master.py:214</a>). Then a first small step, such as picking up tips.</li></ol>
+<h3>The example</h3>
+<p>Start-up conversation, then pick up 8 tips, aspirate 50 uL from column 1 of a source plate, dispense into column 1 of a destination plate, return the tips. Volumes made up.</p>
+<div class="scroll"><pre class="code"><code>def build(link):
+  deck = STARLetDeck()
+  tip_car = hamilton_tip_carrier_L5(name="tip_carrier")
+  tip_car[0] = tips = hamilton_96_tiprack_300uL(name="tips")
+  deck.assign_child_resource(tip_car, track=1)
+  plt_car = hamilton_plate_carrier_L5_ac(name="plate_carrier")
+  plt_car[0] = source = cor_96_wellplate_360uL_Fb(name="source")
+  plt_car[1] = dest = cor_96_wellplate_360uL_Fb(name="destination")
+  deck.assign_child_resource(plt_car, track=8)
+  # On hardware: STARDriver() with no io opens the USB device itself.
+  star = STARlet(deck=deck, driver=STARDriver(io=link))
+  return star, tips, source, dest
+
+
+async def sample_prep(star, tips, source, dest):
+  await star.setup()
+  await star.pipettes.pick_up_tips(tips["A1:H1"])
+  await star.pipettes.aspirate(source["A1:H1"], [50.0] * 8)
+  await star.pipettes.dispense(dest["A1:H1"], [50.0] * 8)
+  await star.pipettes.return_tips()</code></pre></div>
+<details class="ran"><summary>What ran in simulation <span>/</span> 6 tests passed</summary>
+<div class="scroll"><pre><code>ask   set up; 8 tips; 50 uL from source col 1 to destination col 1; return tips
+send  C0RMid0001
+recv  C0RMid0001er00/00kb01kp08
+send  C0VIid0034
+recv  C0VIid0034er00/00
+send  C0DIid0036xp08000&amp;yp4050 3783 3516 3249 2982 2715 2448 2181tp2450tz1220te3600tm1 1 1 1 1 1 ...
+recv  C0DIid0036er00/00
+send  C0TPid0117xp01179 01179 01179 01179 01179 01179 01179 01179yp1458 1368 1278 1188 1098 1008 ...
+state tips on 8 of 8 channels
+recv  C0TPid0117er00/00
+send  C0ASid0176at0 0 0 0 0 0 0 0tm1 1 1 1 1 1 1 1xp02758 02758 02758 02758 02758 02758 02758 027...
+state left in source wells: [44.9] uL each; tips hold [55.1] uL each
+recv  C0ASid0176er00/00
+send  C0DSid0227dm2 2 2 2 2 2 2 2tm1 1 1 1 1 1 1 1xp02758 02758 02758 02758 02758 02758 02758 027...
+state now in destination wells: [55.1] uL each; tips hold [0.0] uL each
+recv  C0DSid0227er00/00
+send  C0TRid0238xp01179 01179 01179 01179 01179 01179 01179 01179yp1458 1368 1278 1188 1098 1008 ...
+state tips on 0 of 8 channels, 96 in the rack
+recv  C0TRid0238er00/00
+done  completed: destination col 1: [55.1] uL each (50 uL asked + liquid class); 96 tips in rack</code></pre></div></details>
+<details class="more"><summary>What is real, what is simulated, and the limits found in the source</summary>
+<div class="triple"><div><h4>Real</h4><ul><li>pylabrobot STARDriver, STARlet device and Pipettes feature, unchanged</li><li>Every frame the driver wrote: 274 commands; the log shows 7 kinds</li><li>Upstream liquid class: 50 uL asked goes out as av00551, 55.1 uL</li></ul></div><div><h4>Simulated</h4><ul><li>The USB transport, every reply and the reply router's clock (sim.py)</li><li>Device state: tips per channel, liquid per tip, volume per well</li><li>A cut-down STARlet: 8 channels, no iSWAP, 96-head or autoload</li></ul></div><div><h4>Not checked</h4><ul><li>Nothing ran on a physical STAR</li><li>Reply values and padding beyond the upstream recording and test captures</li><li>Timing, motion, real liquid behaviour and real error codes for this move</li></ul></div></div>
+<h3>Limits found in the source</h3><ul><li>The device registry still points STAR at the legacy STARBackend, api v0 (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json#L539-L540" target="_blank" rel="noopener">devices.json:539-540</a>).</li><li>Only the STAR recording was read off a device; the STARlet and STARplus ones are derived (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/recordings/README.md#L5-L7" target="_blank" rel="noopener">README.md:5-7</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/recordings/README.md#L47" target="_blank" rel="noopener">README.md:47</a>).</li><li>50 uL becomes 55.1 uL: the 400 uL tip maps to the 300 uL water class StandardVolume_Water_DispenseSurface_Part, curve 50.0: 55.1 (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/liquid_classes/mapping.py#L46" target="_blank" rel="noopener">mapping.py:46</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/liquid_classes/mapping.py#L14004-L14010" target="_blank" rel="noopener">mapping.py:14004-14010</a>).</li><li>Upstream's own STARSimulationDriver answers above the wire: nothing reaches it (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/simulator.py#L8" target="_blank" rel="noopener">simulator.py:8</a>), so wire replies here are this example's.</li></ul>
+<p class="sources">Sources <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/getting-started/installation.md" target="_blank" rel="noopener">Installation and USB interface</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/hamilton/star/debug.md" target="_blank" rel="noopener">Debugging STAR issues (VENUS trace files)</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/design.md" target="_blank" rel="noopener">STAR design notes</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/recordings/README.md" target="_blank" rel="noopener">STAR recordings README</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json" target="_blank" rel="noopener">Device registry</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/master.py" target="_blank" rel="noopener">STARDriver (master.py)</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/protocol/text/framing.py" target="_blank" rel="noopener">Reply framing</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/liquid_handling/backends/hamilton/STAR_tests.py" target="_blank" rel="noopener">Legacy STAR tests (captured replies)</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/liquid_classes/mapping.py" target="_blank" rel="noopener">STAR liquid classes (mapping.py)</a></p>
+</details>
+</section>
+<section class="station" id="inc">
+<p class="eyebrow">Station 4 of 9 <span>/</span> Decoded, in PyLabRobot, older interface</p>
+<h2>LiCONiC STX44 incubator</h2>
+<p class="lead">In PyLabRobot legacy only (v0); STX44_IC is a listed model (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/constants.py#L5" target="_blank" rel="noopener">constants.py:5</a>). ASCII over RS-232.</p>
+<dl class="facts">
+<dt>How software reaches it</dt><dd>RS-232, 9600 baud 8E1, RTS/CTS (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py#L80-L90" target="_blank" rel="noopener">liconic_backend.py:80-90</a>). Host speaks first: a break, CR answered by CC, then 1 ASCII command per line (ST, RS, RD, WR DMn) ending in CR; replies end CR LF (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py#L96-L139" target="_blank" rel="noopener">liconic_backend.py:96-139</a>).</dd>
+<dt>Where the commands came from</dt><dd>Upstream points to LiCONiC documentation: tests check 2 reference points from the Liconic documentation (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend_tests.py#L52-L55" target="_blank" rel="noopener">liconic_backend_tests.py:52-55</a>), and a TODO says a shaker command must still be found there (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py#L369" target="_blank" rel="noopener">liconic_backend.py:369</a>). Many methods are marked UNTESTED (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py#L365-L554" target="_blank" rel="noopener">liconic_backend.py:365-554</a>).</dd>
+</dl>
+<h3>Drive the real one</h3>
+<ol class="steps"><li>Connect the STX PLC by RS-232. The backend opens it at 9600 baud 8E1 with RTS/CTS (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py#L80-L90" target="_blank" rel="noopener">liconic_backend.py:80-90</a>).</li><li>Create ExperimentalLiconicBackend(model="STX44_IC", port="/dev/ttyUSB0"); models are listed in <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/constants.py#L5-L63" target="_blank" rel="noopener">constants.py:5-63</a>.</li><li>Build Incubator(backend, racks=[...], ...) with liconic_rack_* racks matching the cassettes; cassette numbers follow the rack order (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py#L141-L147" target="_blank" rel="noopener">liconic_backend.py:141-147</a>).</li><li>await stx.setup(): break, CR -&gt; CC, ST 1801 -&gt; OK, then RD 1915 until 1 (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py#L96-L139" target="_blank" rel="noopener">liconic_backend.py:96-139</a>).</li><li>Put the plate on stx.loading_tray, then take_in_plate(site), fetch_plate_to_loading_tray(name), get_temperature() (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/incubator.py#L111" target="_blank" rel="noopener">incubator.py:111</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/incubator.py#L151-L177" target="_blank" rel="noopener">incubator.py:151-177</a>).</li><li>Watch the shovel by eye on the first runs and file the upstream device test report (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/needs-testing.md#L31-L35" target="_blank" rel="noopener">needs-testing.md:31-35</a>).</li></ol>
+<h3>The example</h3>
+<p>Take 1 plate from the transfer station into cassette 1, position 1, fetch it back out to the transfer station, then read the temperature. Made-up slot and a made-up 37.0 deg C.</p>
+<div class="scroll"><pre class="code"><code>backend = ExperimentalLiconicBackend(model="STX44_IC", port="/dev/ttyUSB0")
+backend.io = sim  # the only swap: the Serial transport becomes the simulator
+rack = liconic_rack_17mm_22(name="cassette_1")  # 22 positions, 23 mm pitch
+stx = Incubator(backend=backend, name="stx44", size_x=600, size_y=600, size_z=700,
+                racks=[rack], loading_tray_location=Coordinate(0, 0, 0))
+tap.ask("set up: break, CR handshake, activate handling, wait ready")
+await stx.setup()
+
+plate = cellvis_384_wellplate_120uL_Fb(name="cells_384")
+stx.loading_tray.assign_child_resource(plate)
+tap.ask("take the plate in from the transfer station to cassette 1, position 1")
+await stx.take_in_plate(rack.sites[0])
+
+tap.ask("fetch the plate back out to the transfer station")
+await stx.fetch_plate_to_loading_tray("cells_384")
+
+tap.ask("read the temperature")
+temperature = await stx.get_temperature()</code></pre></div>
+<details class="ran"><summary>What ran in simulation <span>/</span> 4 tests passed</summary>
+<div class="scroll"><pre><code>ask   set up: break, CR handshake, activate handling, wait ready
+send  CR | ST 1801 | RD 1915
+recv  CC | OK | 1
+state plate at transfer, ready 1, error 00000, temp 37.0 deg C
+ask   take the plate in from the transfer station to cassette 1, position 1
+send  WR DM0 1 | WR DM23 788 | WR DM25 22 | WR DM5 1 | ST 1904 | RD 1915 | ST 1903
+recv  OK x5 | 1 | OK
+state plate at cassette 1/1, ready 1, error 00000, temp 37.0 deg C
+ask   fetch the plate back out to the transfer station
+send  WR DM0 1 | WR DM23 788 | WR DM25 22 | WR DM5 1 | ST 1905 | RD 1915 | ST 1903
+recv  OK x5 | 1 | OK
+state plate at transfer, ready 1, error 00000, temp 37.0 deg C
+ask   read the temperature
+send  RD DM982
+recv  370
+state plate at transfer, ready 1, error 00000, temp 37.0 deg C
+state upstream warning: Liconic racks need to be configured manually on each setup
+done  completed: sim: plate path shovel &gt; cassette 1/1 &gt; shovel &gt; transfer; 37.0 deg C</code></pre></div></details>
+<details class="more"><summary>What is real, what is simulated, and the limits found in the source</summary>
+<div class="triple"><div><h4>Real</h4><ul><li>Legacy upstream ExperimentalLiconicBackend and Incubator, unchanged</li><li>Every command string the backend writes, e.g. WR DM23 788, ST 1904</li><li>Error codes and messages, e.g. 00103 import lift transfer error</li></ul></div><div><h4>Simulated</h4><ul><li>The STX44 PLC: parsing, CC/OK/1 replies, registers DM0 DM5 DM23 DM25</li><li>Plate location: transfer station, shovel, cassette slot; temperature</li><li>Faults: dropped reply to ST 1904; handler error 00103 on the shovel</li></ul></div><div><h4>Not checked</h4><ul><li>Any physical STX44; nothing here ran on hardware</li><li>Reply to WR and most ST commands assumed OK (TODO_1)</li><li>Real move times and plate position after a fault (TODO_2)</li></ul></div></div>
+<h3>Limits found in the source</h3><ul><li>Shaker, CO2, N2, swap station and sensor methods are marked UNTESTED; shaker_status raises NotImplementedError (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py#L365-L370" target="_blank" rel="noopener">liconic_backend.py:365-370</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py#L448-L554" target="_blank" rel="noopener">liconic_backend.py:448-554</a>).</li><li>A handling fault surfaces only after the 60 s ready poll times out, then RD 1814 and RD DM200 (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py#L319-L339" target="_blank" rel="noopener">liconic_backend.py:319-339</a>).</li><li>The 104 mm rack step size 3563 does not fit the formula the tests use (pitch x 1713 / 50 gives 3769); a TODO says verify with hardware (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend_tests.py#L42-L50" target="_blank" rel="noopener">liconic_backend_tests.py:42-50</a>).</li><li>No non-legacy LiCONiC driver at this commit (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json#L842-L856" target="_blank" rel="noopener">devices.json:842-856</a>, v0). The guide wants 1 plain class, Literal not enums, an untested warning (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md#L17" target="_blank" rel="noopener">device-driver-guide.md:17</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md#L25" target="_blank" rel="noopener">device-driver-guide.md:25</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md#L47" target="_blank" rel="noopener">device-driver-guide.md:47</a>).</li></ul>
+<p class="sources">Sources <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py" target="_blank" rel="noopener">liconic_backend.py at 182f92e</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/constants.py" target="_blank" rel="noopener">constants.py (models, error codes)</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend_tests.py" target="_blank" rel="noopener">liconic_backend_tests.py</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/incubator.py" target="_blank" rel="noopener">Legacy Incubator frontend</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md" target="_blank" rel="noopener">Device driver guide</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json" target="_blank" rel="noopener">devices.json registry entry</a></p>
+</details>
+</section>
+<section class="station" id="rail">
+<p class="eyebrow">Station 5 of 9 <span>/</span> Maker's SDK, nothing to decode</p>
+<h2>Rail-mounted transfer arm (linear track)</h2>
+<p class="lead">Not in PyLabRobot yet, the maker's SDK documents it. The example writes the class.</p>
+<dl class="facts">
+<dt>How software reaches it</dt><dd>Through the xArm controller with xarm-python-sdk: the same XArmAPI object as the arm calls get/set_linear_motor_*; the SDK sends them as Modbus to the control box RS-485 (xarm-python-sdk xarm/x3/linear_motor.py:40-46).</dd>
+<dt>Where the commands came from</dt><dd>Nothing decoded. Names, units and return codes come from xarm-python-sdk 1.18.4 (xarm-python-sdk xarm/wrapper/xarm_api.py:3648-3805, xarm-python-sdk xarm/x3/linear_motor.py:82-219, xarm-python-sdk xarm/x3/code.py:52-54). A search of PyLabRobot 182f92e for linear track or linear motor finds nothing.</dd>
+</dl>
+<h3>Stand it up</h3>
+<ol class="steps"><li>Read the track calls in the SDK: get_linear_motor_pos/status/error/on_zero/is_enabled and set_linear_motor_enable/back_origin/pos (xarm-python-sdk xarm/wrapper/xarm_api.py:3648-3805).</li><li>Write 1 plain class with async setup() and stop(); stop() restores the enable state setup() found (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md#L22-L23" target="_blank" rel="noopener">device-driver-guide.md:22-23</a>).</li><li>Expose intent only: home() and move_to(mm) read the state, act only if needed, then confirm (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md#L39-L41" target="_blank" rel="noopener">device-driver-guide.md:39-41</a>).</li><li>Issue moves with wait=False and confirm in Python: error register, then motion bit 0 clear (xarm-python-sdk xarm/wrapper/xarm_api.py:3669-3670), then the position report.</li><li>Log a warning in setup() that it is unverified (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md#L45-L47" target="_blank" rel="noopener">device-driver-guide.md:45-47</a>); test it against a simulated SDK object first.</li><li>Teach the station positions on the real track and set a measured reply timeout before any real run.</li></ol>
+<h3>The example</h3>
+<p>Home the track if it is not homed, travel to a taught station at 450 mm and 200 mm/s, confirm the arrival from the position report. Positions and speed are made up.</p>
+<div class="scroll"><pre class="code"><code>async def travel(track: LinearTrack) -&gt; int:
+  await track.setup()  # enables the track if it was off
+  await track.home()  # no-op when already homed
+  at = await track.move_to(READER_STATION_MM, speed=SPEED_MM_S)
+  await track.stop()  # restores the enable state found at setup
+  return at
+
+# track = LinearTrack(ip="192.168.1.220", travel_mm=700)</code></pre></div>
+<details class="ran"><summary>What ran in simulation <span>/</span> 6 tests passed</summary>
+<div class="scroll"><pre><code>ask   setup, home, move to 450 mm at 200 mm/s, stop
+send  get_linear_motor_is_enabled()
+recv  (0, 0)
+send  set_linear_motor_enable(True)
+recv  0
+send  get_linear_motor_on_zero()
+recv  (0, 0)
+send  set_linear_motor_back_origin(wait=False,auto_enable=True)
+recv  0
+send  get_linear_motor_on_zero()
+recv  (0, 1)
+send  get_linear_motor_pos()
+recv  (0, 0)
+send  set_linear_motor_pos(450,speed=200,wait=False)
+recv  0
+send  get_linear_motor_error()
+recv  (0, 0)
+send  get_linear_motor_status()
+recv  (0, 0)
+send  get_linear_motor_pos()
+recv  (0, 450)
+send  set_linear_motor_enable(False)
+recv  0
+state pos 450 mm, enabled 0, on_zero 1, error 0, moves 1
+done  completed: position report 450 mm == taught 450 mm, error register 0</code></pre></div></details>
+<details class="more"><summary>What is real, what is simulated, and the limits found in the source</summary>
+<div class="triple"><div><h4>Real</h4><ul><li>Method names, arguments, units and return codes copied from xarm-python-sdk 1.18.4</li><li>Error register titles copied from the SDK code table</li></ul></div><div><h4>Simulated</h4><ul><li>The SDK object: position, enable, homed, motion and error registers</li><li>Instant motion. lost_reply: the move runs, the position report after it never returns</li><li>Which error appears (13)</li></ul></div><div><h4>Not checked</h4><ul><li>Any physical track</li><li>linear_track.py itself on hardware</li><li>Real travel times and a sane timeout</li></ul></div></div>
+<h3>Limits found in the source</h3><ul><li>The SDK refuses set_linear_motor_pos with code 82 until on_zero is 1, so on_zero acts as a homed flag (xarm-python-sdk xarm/x3/linear_motor.py:158-161).</li><li>The SDK sends int(pos*2000) (xarm-python-sdk xarm/x3/linear_motor.py:166) but reports position as round(raw/2000), whole mm (xarm-python-sdk xarm/x3/linear_motor.py:58).</li><li>Stroke depends on the serial number: 0..700, 0..1000 or 0..1500 mm; speed 1..1000 mm/s (xarm-python-sdk xarm/wrapper/xarm_api.py:3795-3799).</li><li>The SDK's own wait polls every 0.1 s for up to 100 s by default and returns 80 on any error register (xarm-python-sdk xarm/x3/linear_motor.py:221-240).</li><li>After a hold or an error the example sends nothing more, so stop() does not run and the track stays enabled until a person checks it. The guide asks for cleanup on errors too (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md#L23" target="_blank" rel="noopener">device-driver-guide.md:23</a>); what is safe to send after an unknown outcome is an open point.</li></ul>
+<p class="sources">Sources <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md" target="_blank" rel="noopener">PyLabRobot device-driver guide</a> <span>/</span> <a href="https://raw.githubusercontent.com/xArm-Developer/xArm-Python-SDK/master/doc/api/xarm_api.md" target="_blank" rel="noopener">xArm Python SDK API doc, master branch (linear motor calls)</a></p>
+</details>
+</section>
+<section class="station" id="xarm">
+<p class="eyebrow">Station 6 of 9 <span>/</span> Maker's SDK, nothing to decode</p>
+<h2>UFACTORY xArm 6 plate arm</h2>
+<p class="lead">In PyLabRobot (XArm6). It wraps the maker's published Python SDK, so there is no wire to decode.</p>
+<dl class="facts">
+<dt>How software reaches it</dt><dd>Ethernet to the xArm controller through xarm-python-sdk (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/ufactory/xarm6/hello-world.ipynb#L12" target="_blank" rel="noopener">hello-world.ipynb:12</a>). XArmAPI(ip) is created in setup(), then each operation is 1 blocking SDK call run in a thread (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py#L86" target="_blank" rel="noopener">xarm6.py:86</a>).</dd>
+<dt>Where the commands came from</dt><dd>Nothing decoded. The driver calls the maker's SDK (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py#L120-L122" target="_blank" rel="noopener">xarm6.py:120-122</a>) and checks only its return code (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py#L60-L95" target="_blank" rel="noopener">xarm6.py:60-95</a>). The registry lists it as status basic (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json#L2132" target="_blank" rel="noopener">devices.json:2132</a>).</dd>
+</dl>
+<h3>Drive the real one</h3>
+<ol class="steps"><li>Install the optional SDK extra: pip install PyLabRobot[xarm] (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/ufactory/xarm6/hello-world.ipynb#L12" target="_blank" rel="noopener">hello-world.ipynb:12</a>).</li><li>Create XArm6(ip=..., tcp_offset=...) with the controller IP and your gripper mount offset, then await setup().</li><li>Teach the hotel and reader poses: start_freedrive_mode(free_axes=[0]), request_gripper_pose(), stop_freedrive_mode() (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/ufactory/xarm6/hello-world.ipynb#L282" target="_blank" rel="noopener">hello-world.ipynb:282</a>).</li><li>Open with move_gripper(width=max_gripper_width). The driver's default jaw range is 71 to 150 mm (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py#L41-L42" target="_blank" rel="noopener">xarm6.py:41-42</a>): set it to your gripper.</li><li>Wrap pick_up_at_location and drop_at_location with your own above-pose moves; they only move and grip (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py#L270-L271" target="_blank" rel="noopener">xarm6.py:270-271</a>).</li><li>Put a timeout around each call and check the plate yourself; the driver reports no plate-held state.</li></ol>
+<h3>The example</h3>
+<p>Carry 1 plate from a hotel nest to the reader nest: above pick, open, descend, close, lift, above place, descend, open, retreat. All poses are made up.</p>
+<div class="scroll"><pre class="code"><code>async def carry(arm: XArm6) -&gt; None:
+  up = Coordinate(z=80)
+  down = Rotation(x=180, y=0, z=0)
+  await arm.move_to_location(HOTEL + up, down)
+  await arm.move_gripper(width=arm.max_gripper_width)
+  await arm.pick_up_at_location(HOTEL, down, resource_width=80)
+  await arm.move_to_location(HOTEL + up, down)
+  await arm.move_to_location(READER + up, down)
+  await arm.drop_at_location(READER, down, resource_width=80)
+  await arm.move_to_location(READER + up, down)
+
+# arm = XArm6(ip="192.168.1.220"); await arm.setup(); await carry(arm)</code></pre></div>
+<details class="ran"><summary>What ran in simulation <span>/</span> 7 tests passed</summary>
+<div class="scroll"><pre><code>ask   setup()
+state setup made 9 SDK calls, all returned 0; mode 0, state 0, gripper enabled True
+ask   carry 1 plate: hotel nest -&gt; reader nest
+send  set_position(x=300,y=200,z=180,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)
+recv  0
+send  set_gripper_position(850,wait=True,speed=0)
+recv  0
+send  set_position(x=300,y=200,z=100,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)
+recv  0
+send  set_gripper_position(97,wait=True,speed=0)
+recv  0
+send  set_position(x=300,y=200,z=180,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)
+recv  0
+send  set_position(x=300,y=-200,z=130,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)
+recv  0
+send  set_position(x=300,y=-200,z=50,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)
+recv  0
+send  set_gripper_position(850,wait=True,speed=0)
+recv  0
+send  set_position(x=300,y=-200,z=130,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)
+recv  0
+state plate at reader, pose [300, -200, 130], error_code 0
+done  completed: plate at reader nest, jaws at 850 of 850 units, error_code 0</code></pre></div></details>
+<details class="more"><summary>What is real, what is simulated, and the limits found in the source</summary>
+<div class="triple"><div><h4>Real</h4><ul><li>Upstream pylabrobot.ufactory.xarm6.XArm6 at 182f92e</li><li>Every SDK call and argument it makes</li><li>Its error raising (XArm6Error)</li></ul></div><div><h4>Simulated</h4><ul><li>The XArmAPI object: pose, jaws, error and state codes</li><li>Where the plate is</li><li>The SDK return codes, copied from xarm-python-sdk 1.18.4</li></ul></div><div><h4>Not checked</h4><ul><li>Any physical arm or bio-gripper</li><li>Real move times and a sane timeout (TODO_1)</li><li>Whether the gripper moves while the arm is in an error state</li></ul></div></div>
+<h3>Limits found in the source</h3><ul><li>A return code of 0 or None is success: _call_sdk never reads the arm error_code or state (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py#L91" target="_blank" rel="noopener">xarm6.py:91</a>). For non-move calls the SDK maps codes 1, 2 and 9 to 0 (xarm-python-sdk xarm/x3/base.py:2179).</li><li>A grip width outside the range is clamped to it with no error, 71 to 150 mm by default (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py#L149-L152" target="_blank" rel="noopener">xarm6.py:149-152</a>).</li><li>No plate-held query. is_gripper_closed() only compares the reported width to 73 mm by default (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py#L185-L188" target="_blank" rel="noopener">xarm6.py:185-188</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py#L43" target="_blank" rel="noopener">xarm6.py:43</a>).</li><li>move_gohome is retried once after clear_errors (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py#L205-L212" target="_blank" rel="noopener">xarm6.py:205-212</a>); moves are not retried (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py#L239-L251" target="_blank" rel="noopener">xarm6.py:239-251</a>).</li></ul>
+<p class="sources">Sources <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py" target="_blank" rel="noopener">xarm6.py</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6_tests.py" target="_blank" rel="noopener">xarm6_tests.py</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/ufactory/xarm6/hello-world.ipynb" target="_blank" rel="noopener">xArm 6 hello-world notebook</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json" target="_blank" rel="noopener">devices.json</a></p>
+</details>
+</section>
+<section class="station" id="hotel">
+<p class="eyebrow">Station 7 of 9 <span>/</span> Nothing to decode</p>
+<h2>Passive plate hotel</h2>
+<p class="lead">No controller, so nothing to decode. In PyLabRobot it is a resource: plate holders on a carrier.</p>
+<dl class="facts">
+<dt>How software reaches it</dt><dd>Nothing to reach: no wire. Software keeps a model of what sits on each shelf (PyLabRobot resources) and the arm that loads it is the only actor. The scheduler owns reservations and timers.</dd>
+<dt>Where the commands came from</dt><dd>Nothing decoded. PyLabRobot 182f92e has no hotel class; the example uses a PlateCarrier (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/carrier.py#L269-L331" target="_blank" rel="noopener">carrier.py:269-331</a>) with 24 PlateHolder sites (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/carrier.py#L159-L211" target="_blank" rel="noopener">carrier.py:159-211</a>). Assigning to a taken spot raises ValueError (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/carrier.py#L79-L87" target="_blank" rel="noopener">carrier.py:79-87</a>).</dd>
+</dl>
+<h3>Stand it up</h3>
+<ol class="steps"><li>Measure the shelf pitch, the first shelf height and the plate seat; put them in a PlateCarrier of PlateHolder sites.</li><li>Set pedestal_size_z for each PlateHolder; the constructor raises ValueError without it (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/carrier.py#L184-L189" target="_blank" rel="noopener">carrier.py:184-189</a>).</li><li>Place with hotel[slot] = plate and remove with hotel[slot] = None, so a taken spot raises instead of stacking (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/carrier.py#L104-L111" target="_blank" rel="noopener">carrier.py:104-111</a>).</li><li>Keep reservations and dwell timers in the scheduler, with a clock you can inject in tests.</li><li>Free a slot only after the arm confirms the pickup; an unconfirmed pickup keeps the slot reserved.</li><li>Teach the arm 1 pose per shelf and check each against the model before the first run.</li></ol>
+<h3>The example</h3>
+<p>Reserve shelf 5, place 1 skirted 384-well assay plate, wait a 600 s dwell on a simulated clock, pick it up, free the shelf. Sizes, pitch and dwell are made up.</p>
+<div class="scroll"><pre class="code"><code>hotel_sched = Scheduler(hotel, sim, clock)
+plate = Greiner_384_wellplate_28ul_Fb("assay_plate_1")
+log("ask   reserve slot 5, place, dwell 600 s, pick up")
+hotel_sched.reserve(5, plate.name)
+try:
+  hotel_sched.place(5, plate)  # hotel[5] = plate
+except ValueError as e:  # "spot 5 already has a resource" (carrier.py:86)
+  out.update(outcome="error", evidence=f"ValueError: {e}")
+else:
+  clock.advance(DWELL_S)
+  log(f"state t={clock.now_s:g} s, dwell done: {hotel_sched.dwell_done(5)}")
+  if hotel_sched.pick_up(5):
+    out.update(outcome="completed", evidence="pickup confirmed, slot 5 free")
+  else:
+    out.update(outcome="hold", evidence=f"pickup sent {sim.pickups} time, no "
+               "confirmation; slot 5 stays reserved")</code></pre></div>
+<details class="ran"><summary>What ran in simulation <span>/</span> 5 tests passed</summary>
+<div class="scroll"><pre><code>ask   reserve slot 5, place, dwell 600 s, pick up
+send  place slot=5 plate=assay_plate_1
+recv  place ok slot=5
+state t=600 s, dwell done: True
+send  pickup slot=5 plate=assay_plate_1
+recv  pickup ok slot=5
+state model slot 5: None; shelf 5: None; reserved: []
+done  completed: pickup confirmed, slot 5 free</code></pre></div></details>
+<details class="more"><summary>What is real, what is simulated, and the limits found in the source</summary>
+<div class="triple"><div><h4>Real</h4><ul><li>Upstream PlateCarrier, PlateHolder and Plate classes</li><li>The ValueError raised for a taken spot</li><li>An upstream 384-well plate definition (Greiner 784075)</li></ul></div><div><h4>Simulated</h4><ul><li>The clock</li><li>What is physically on each shelf</li><li>The arm's place and pickup confirmations</li></ul></div><div><h4>Not checked</h4><ul><li>Any physical hotel or its dimensions</li><li>The arm poses per shelf</li></ul></div></div>
+<h3>Limits found in the source</h3><ul><li>lost_reply maps to a pickup with no confirmation; device_error maps to placing into a taken spot (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/carrier.py#L86" target="_blank" rel="noopener">carrier.py:86</a>).</li><li>Only hotel[slot] = plate refuses a taken spot. PlateHolder.assign_child_resource defaults to reassign=True (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/carrier.py#L195-L211" target="_blank" rel="noopener">carrier.py:195-211</a>), and then adds a 2nd plate with no error (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/resource_holder.py#L74-L76" target="_blank" rel="noopener">resource_holder.py:74-76</a>).</li><li>PlateHolder refuses non-skirted plates (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/carrier.py#L209-L210" target="_blank" rel="noopener">carrier.py:209-210</a>) and needs pedestal_size_z (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/carrier.py#L184-L189" target="_blank" rel="noopener">carrier.py:184-189</a>).</li><li>No reservations or timers in pylabrobot/resources; the scheduler in drive.py is this example's own code.</li></ul>
+<p class="sources">Sources <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/carrier.py" target="_blank" rel="noopener">carrier.py</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/resource_holder.py" target="_blank" rel="noopener">resource_holder.py</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/resources/greiner/plates.py" target="_blank" rel="noopener">greiner/plates.py (384-well plate used)</a></p>
+</details>
+</section>
+<section class="station" id="reader">
+<p class="eyebrow">Station 8 of 9 <span>/</span> Not decoded yet</p>
+<h2>BMG LABTECH PHERAstar FSX</h2>
+<p class="lead">Not in PyLabRobot. Upstream drives 2 other BMG readers; this one's commands are unknown.</p>
+<dl class="facts">
+<dt>How software reaches it</dt><dd>Unknown. Upstream's 2 BMG readers share 1 framing module: the CLARIOstar speaks FTDI frames (STX, size, header, payload, 24-bit sum, CR) or USB packets, the VANTAstar USB only. The host asks, then polls status.</dd>
+<dt>Where the commands came from</dt><dd>Nothing decoded. The example runs the method on a synthetic reader whose payloads are the text TODO_1..TODO_4. Upstream has no PHERAstar code; its registry lists only CLARIOstar and VANTAstar for BMG (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json#L253-L287" target="_blank" rel="noopener">devices.json:253-287</a>).</dd>
+</dl>
+<h3>Decode it</h3>
+<ol class="steps"><li>Check how it enumerates on USB (FTDI bridge or native USB, VID and PID) against the 2 BMG readers upstream drives (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/bmg_labtech/clariostar/driver/framing.py#L6" target="_blank" rel="noopener">framing.py:6</a> and <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/bmg_labtech/vantastar/driver/framing.py#L4" target="_blank" rel="noopener">framing.py:4</a>).</li><li>Capture the vendor software doing 1 action at a time (tray out, tray in, 1 read), marking each action, with plr-re capture and marks.</li><li>Test the sibling framing on the capture: does every frame fit the FTDI frame or the USB packet layout (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/bmg_labtech/protocol/framing.py#L3-L17" target="_blank" rel="noopener">framing.py:3-17</a>)?</li><li>Map status and error replies before any motion: which bits mean busy, tray out, refused, error, and which codes come back.</li><li>Write the 1-class driver and replay the captured transcripts as tests through a fake transport, per the device-driver guide section 5.</li><li>First live command read-only (status), then the tray, then a read of an empty plate, with a person at the reader.</li></ol>
+<h3>The example</h3>
+<p>A stand-in for the vendor software moves the tray out and in and reads a 384-well plate on a synthetic reader; the frames are captured, decoded, replayed behind guards, then read by a draft class.</p>
+<div class="scroll"><pre class="code"><code>reader = PHERAstarDraft(transport=transport)  # unverified, commands are TODO_n
+await reader.setup()  # logs a loud "unverified" warning
+try:
+  await reader.ensure_tray_in()  # reads state, moves only if needed, confirms
+  values = await reader.read_plate()  # 1 read command, never re-sent
+  outcome = "completed"
+  evidence = f"{len(values)} made-up values, well A1 = {values[0]}"
+except ReplyLost as e:  # read sent, no reply: stop here, a human checks
+  outcome, evidence = "hold", str(e)
+except ReaderDeviceError as e:  # error bit set in the reply
+  outcome, evidence = "error", f"device error codes {e.codes} (synthetic code)"
+finally:
+  await reader.stop()</code></pre></div>
+<details class="ran"><summary>What ran in simulation <span>/</span> 7 tests passed</summary>
+<div class="scroll"><pre><code>ask   (a) capture: vendor stand-in does 3 actions, 1 at a time, each marked
+state captured tray_out: TODO_1 + TODO_4; tray out, plate on tray, plates read 0
+state captured tray_in: TODO_2 + TODO_4; tray in, plate on tray, plates read 0
+state captured read_plate: TODO_3 + TODO_4; tray in, plate on tray, plates read 1
+ask   (b) decode: framing, then group frames by action mark
+state 6 host frames fit STX|size|hdr|payload|sum24|CR, header 0x3f; Modbus RTU frames found: 0
+state in every window (status candidate): b'TODO_4'
+state tray_out vs tray_in differ at offsets [9, 12]
+state protocol map coverage 4/4
+ask   (c) replay TODO_3 (read) behind plr_re guards: armed, actuation allowed (sim)
+send  02 00 0e 3f 54 4f 44 4f 5f 33 00 02 17 0d
+recv  02 03 0c 3f 7d 03 02 00 03 e8 04 0d 04 32 04 57 04 7c 04 a1 04 c6 04 eb ... (780 bytes)
+state replay: 384 values back; tray in, plate on tray, plates read 2
+ask   (d) the same read through the draft driver class
+send  02 00 0e 3f 54 4f 44 4f 5f 34 00 02 18 0d
+recv  02 00 12 3f 01 03 02 00 05 00 00 00 00 00 00 00 5e 0d
+send  02 00 0e 3f 54 4f 44 4f 5f 33 00 02 17 0d
+recv  02 03 0c 3f 7d 03 02 00 03 e8 04 0d 04 32 04 57 04 7c 04 a1 04 c6 04 eb ... (780 bytes)
+state tray in, plate on tray, plates read 3; executed in (d): {'TODO_3': 1}
+done  completed: 384 made-up values, well A1 = 1000</code></pre></div></details>
+<details class="more"><summary>What is real, what is simulated, and the limits found in the source</summary>
+<div class="triple"><div><h4>Real</h4><ul><li>Upstream BMG framing functions build and check every frame</li><li>plr_re Marks, load_serial_log, diff_frames, scan_modbus_stream, ProtocolMap, GuardedReplayer</li></ul></div><div><h4>Simulated</h4><ul><li>The reader, its tray, plate and 384 made-up values</li><li>Every command payload: ASCII TODO_1..TODO_4, not PHERAstar bytes</li><li>The vendor software session that was captured</li></ul></div><div><h4>Not checked</h4><ul><li>Any PHERAstar byte, port, header, status bit or error code</li><li>Whether the PHERAstar shares the CLARIOstar and VANTAstar framing</li><li>The draft class on any hardware</li></ul></div></div>
+<h3>Limits found in the source</h3><ul><li>BMG's page says its readers can be controlled through ActiveX, DDE and SiLA interfaces, documented in its software manuals. That route may need no wire decoding.</li><li>Same maker as 2 decoded readers is a hypothesis to test first, not a result. Upstream lists CLARIOstar firmware 1.35 only as checked on hardware (<a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/bmg_labtech/clariostar/driver/confirmed_firmware_versions.py#L5" target="_blank" rel="noopener">confirmed_firmware_versions.py:5</a>).</li><li>plr_re replays a stored frame and reads once (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/replay.py#L99-L102" target="_blank" rel="noopener">replay.py:99-102</a>), 512 bytes by default (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/transports.py#L24" target="_blank" rel="noopener">transports.py:24</a>). The example reads the rest of the 780-byte reply itself.</li><li>plr_re splits only Modbus RTU streams (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/decode.py#L132" target="_blank" rel="noopener">decode.py:132</a>) and drops timestamps on load (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/decode.py#L160-L170" target="_blank" rel="noopener">decode.py:160-170</a>). The example splits and groups by marks itself.</li></ul>
+<p class="sources">Sources <span>/</span> <a href="https://www.bmglabtech.com/en/workflow-automation/" target="_blank" rel="noopener">BMG LABTECH workflow automation</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/bmg_labtech/protocol/framing.py" target="_blank" rel="noopener">Upstream BMG framing</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/bmg_labtech/vantastar/driver/responses.py" target="_blank" rel="noopener">Upstream VANTAstar reply format</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md" target="_blank" rel="noopener">Upstream device-driver guide</a> <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json" target="_blank" rel="noopener">Upstream device registry</a> <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/capture.py" target="_blank" rel="noopener">plr-re capture and marks</a> <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/decode.py" target="_blank" rel="noopener">plr-re decode</a> <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/replay.py" target="_blank" rel="noopener">plr-re guarded replay</a> <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/transports.py" target="_blank" rel="noopener">plr-re byte connections</a> <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/protocolmap.py" target="_blank" rel="noopener">plr-re protocol map</a></p>
+</details>
+</section>
+<section class="station" id="lcms">
+<p class="eyebrow">Station 9 of 9 <span>/</span> Nothing to decode</p>
+<h2>Shared LC-MS bench</h2>
+<p class="lead">Not in PyLabRobot. The toolkit playbook's route, a Ready line and a Start line, needs no decoding.</p>
+<dl class="facts">
+<dt>How software reaches it</dt><dd>Rear remote connector: software reads a Ready line and closes a Start contact through opto-isolators (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/instruments/agilent-6530-qtof/README.md#L88-L97" target="_blank" rel="noopener">README.md:88-97</a>). The vendor software holds the method. Raw files are picked up from a data folder.</dd>
+<dt>Where the commands came from</dt><dd>Nothing to decode for this route. Upstream has no LC, MS or autosampler driver (no match in pylabrobot/ or <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json" target="_blank" rel="noopener">devices.json</a>). The signals come from the toolkit playbook; its LAN control map is still in progress (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/instruments/agilent-6530-qtof/README.md#L164-L165" target="_blank" rel="noopener">README.md:164-165</a>).</dd>
+</dl>
+<h3>Stand it up</h3>
+<ol class="steps"><li>Find the model, photograph the rear panel and read the remote connector pinout from its manual; do not assume pin numbers (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/instruments/agilent-6530-qtof/README.md#L93-L95" target="_blank" rel="noopener">README.md:93-95</a>).</li><li>Wire Ready, Start, Stop and ground through opto-isolators or relays; never wire GPIO straight to the instrument (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/instruments/agilent-6530-qtof/WIRING.md#L33-L35" target="_blank" rel="noopener">WIRING.md:33-35</a>).</li><li>Find the Ready line and its sense with the toolkit's line scan command (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/cli.py#L63-L77" target="_blank" rel="noopener">cli.py:63-77</a>), then confirm Ready read-only before any Start.</li><li>Load the injection sequence and method in the vendor acquisition software.</li><li>With a person present, close Start for 1 injection and check that 1 raw file appears in the data folder.</li><li>Point the adapter at the data folder and match each injection to its raw file before the next Start.</li></ol>
+<h3>The example</h3>
+<p>8 aliquots from 1 plate as an injection sequence: for each, check Ready, log the dry-run Start (nothing sent), wait for its raw file. A missing file holds; Ready low stops with the fault text.</p>
+<div class="scroll"><pre class="code"><code>remote = Agilent6530Remote(PINS, Guards(armed=False), io=station)  # dry run
+for row, aliquot in enumerate(aliquots, 1):
+  if not remote.is_ready():  # reads the Ready line
+    outcome = "error"
+    evidence = f"Ready low before row {row}: {station.fault_text}; no Start sent"
+    break
+  remote.start_run()  # dry run: logs the Start pulse, sends nothing
+  for note in notes.notes:
+    log(f"send  {note}")
+    station.on_note(note)  # the simulated workstation acts on it
+  notes.notes.clear()
+  raw = await wait_for_raw_file(raw_dir, row, aliquot)
+  if raw is None:  # started, no file: hold, never start this aliquot again
+    outcome = "hold"
+    evidence = f"row {row} {aliquot} started, no raw file; not re-injected"
+    break
+  matched[aliquot] = raw
+  log(f"recv  {raw}")</code></pre></div>
+<details class="ran"><summary>What ran in simulation <span>/</span> 5 tests passed</summary>
+<div class="scroll"><pre><code>ask   run sequence.csv: 8 injections from PLATE01, 1 start each
+send  [dry-run] would pulse START on BCM27 for 0.25s
+recv  001_PLATE01-A1.raw.stub
+send  [dry-run] would pulse START on BCM27 for 0.25s
+recv  002_PLATE01-B1.raw.stub
+send  [dry-run] would pulse START on BCM27 for 0.25s
+recv  003_PLATE01-C1.raw.stub
+send  [dry-run] would pulse START on BCM27 for 0.25s
+recv  004_PLATE01-D1.raw.stub
+send  [dry-run] would pulse START on BCM27 for 0.25s
+recv  005_PLATE01-E1.raw.stub
+send  [dry-run] would pulse START on BCM27 for 0.25s
+recv  006_PLATE01-F1.raw.stub
+send  [dry-run] would pulse START on BCM27 for 0.25s
+recv  007_PLATE01-G1.raw.stub
+send  [dry-run] would pulse START on BCM27 for 0.25s
+recv  008_PLATE01-H1.raw.stub
+state ready True, rows started 8/8, raw files 8; starts per aliquot max 1
+done  completed: 8/8 injections matched to a raw file</code></pre></div></details>
+<details class="more"><summary>What is real, what is simulated, and the limits found in the source</summary>
+<div class="triple"><div><h4>Real</h4><ul><li>plr_re contact-closure controller and guards, in dry run (the example in the playbook)</li><li>The Start note the toolkit logs in dry run</li></ul></div><div><h4>Simulated</h4><ul><li>The acquisition workstation, its Ready line and sequence</li><li>Raw files: 1 text stub per injection in a temporary folder</li><li>Aliquot ids, volumes, fault text</li></ul></div><div><h4>Not checked</h4><ul><li>Whether the hall's LC-MS has a remote Ready and Start connector</li><li>Any pin, polarity or pulse length on hardware</li><li>How long an injection takes and how the real raw files are named</li></ul></div></div>
+<h3>Limits found in the source</h3><ul><li>The toolkit's Start and Ready path has mock and dry-run tests only (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/tests/test_plr_re.py#L108-L131" target="_blank" rel="noopener">test_plr_re.py:108-131</a> and <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/README.md#L119-L120" target="_blank" rel="noopener">README.md:119-120</a>); hardware validation is still to come (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/instruments/agilent-6530-qtof/README.md#L166" target="_blank" rel="noopener">README.md:166</a>).</li><li>In dry run start_run transmits nothing (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/instruments/agilent6530.py#L97-L103" target="_blank" rel="noopener">agilent6530.py:97-103</a>); the example relays the logged note to the simulator.</li><li>Start is 1 TTL line and carries no sample id (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/instruments/agilent-6530-qtof/WIRING.md#L10-L20" target="_blank" rel="noopener">WIRING.md:10-20</a>). The vendor sequence sets the order, so the adapter matches by row, with a file name rule made up here.</li><li>wait_ready sleeps for real (<a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/instruments/agilent6530.py#L86-L93" target="_blank" rel="noopener">agilent6530.py:86-93</a>), so the example reads is_ready once per injection instead.</li></ul>
+<p class="sources">Sources <span>/</span> <a href="https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json" target="_blank" rel="noopener">Upstream device registry</a> <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/instruments/agilent-6530-qtof/README.md" target="_blank" rel="noopener">Toolkit playbook (LC-MS example)</a> <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/instruments/agilent-6530-qtof/WIRING.md" target="_blank" rel="noopener">Toolkit playbook wiring</a> <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/instruments/agilent6530.py" target="_blank" rel="noopener">Toolkit contact-closure controller</a> <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/tests/test_plr_re.py" target="_blank" rel="noopener">Toolkit tests</a> <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/README.md" target="_blank" rel="noopener">Toolkit README</a> <span>/</span> <a href="https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/configs/agilent-pinmap.example.json" target="_blank" rel="noopener">Toolkit example pin map</a></p>
+</details>
+</section>
+<section class="station" id="walk">
+<p class="eyebrow">The central harness</p>
+<h2>1 plate through all 9</h2>
+<p class="lead">Every station answers the harness the same way: completed, hold, or error.</p>
+<p>The first run is clean. In the second run the reader carries out the read and its reply is
+lost. The harness holds, sends no second read, and does not ask the next station.</p>
+<div class="scroll"><pre><code>run SIM-001, clean: 18 record lines in harness/runs/SIM-001.jsonl
+  1 culture  completed  CB-0001 released, worklist WL-7 matches
+  2 seed     completed  sim: 24/24 columns at 40 uL/well, peristaltic pump, plate byte 1 (384 std)
+  3 star     completed  destination col 1: [55.1] uL each (50 uL asked + liquid class); 96 tips i...
+  4 inc      completed  sim: plate path shovel &gt; cassette 1/1 &gt; shovel &gt; transfer; 37.0 deg C
+  5 rail     completed  position report 450 mm == taught 450 mm, error register 0
+  6 xarm     completed  plate at reader nest, jaws at 850 of 850 units, error_code 0
+  7 hotel    completed  pickup confirmed, slot 5 free
+  8 reader   completed  384 made-up values, well A1 = 1000
+  9 lcms     completed  8/8 injections matched to a raw file
+run SIM-002, the reader's reply is lost: 16 record lines in harness/runs/SIM-002.jsonl
+  1 culture  completed  CB-0001 released, worklist WL-7 matches
+  2 seed     completed  sim: 24/24 columns at 40 uL/well, peristaltic pump, plate byte 1 (384 std)
+  3 star     completed  destination col 1: [55.1] uL each (50 uL asked + liquid class); 96 tips i...
+  4 inc      completed  sim: plate path shovel &gt; cassette 1/1 &gt; shovel &gt; transfer; 37.0 deg C
+  5 rail     completed  position report 450 mm == taught 450 mm, error register 0
+  6 xarm     completed  plate at reader nest, jaws at 850 of 850 units, error_code 0
+  7 hotel    completed  pickup confirmed, slot 5 free
+  8 reader   hold       no reply to b'TODO_3'; not re-sent, reader state unknown
+  9 lcms     not asked  waiting behind reader</code></pre></div>
+<p class="small" style="margin-top:14px">19 harness tests passed: each of the 9
+stations with a lost reply and with an instrument error.</p>
+</section>
+
+<section class="station" id="run">
+<p class="eyebrow">Run it yourself</p>
+<h2>3 commands</h2>
+<div class="scroll"><pre><code>uv run pytest                          # all 68 tests
+uv run python -m stations.star.drive   # 1 station, with its wire traffic
+uv run python -m harness.walk          # 1 plate through all 9</code></pre></div>
+</section>
+
+<section class="station" id="limits">
+<p class="eyebrow">Read this before quoting the page</p>
+<h2>What this is not</h2>
+<ul>
+<li>It is not a bench result. No command on this page reached a physical instrument.</li>
+<li>Each simulated instrument answers only the commands its example sends.
+It is a check of the driver's side of the wire.</li>
+<li>Every volume, position, temperature and timing is a made-up round number.</li>
+<li>Where a station says not decoded, the payloads in its example are placeholders.
+They are not that instrument's commands.</li>
+</ul>
+</section>
+</div>
+<script>
+(function () {
+  var b = document.getElementById("openall"), on = false;
+  if (!b) return;
+  b.addEventListener("click", function () {
+    on = !on;
+    document.querySelectorAll("details").forEach(function (d) { d.open = on; });
+    b.textContent = on ? "Close every detail" : "Open every detail";
+  });
+})();
+</script>
+</body></html>

@@ -1,0 +1,75 @@
+{
+ "key": "inc",
+ "name": "LiCONiC STX44 incubator",
+ "order": 4,
+ "status": "in_plr_legacy",
+ "status_line": "In PyLabRobot legacy only (v0); STX44_IC is a listed model (pylabrobot/legacy/storage/liconic/constants.py:5). ASCII over RS-232.",
+ "reaches": "RS-232, 9600 baud 8E1, RTS/CTS (pylabrobot/legacy/storage/liconic/liconic_backend.py:80-90). Host speaks first: a break, CR answered by CC, then 1 ASCII command per line (ST, RS, RD, WR DMn) ending in CR; replies end CR LF (pylabrobot/legacy/storage/liconic/liconic_backend.py:96-139).",
+ "decoded_from": "Upstream points to LiCONiC documentation: tests check 2 reference points from the Liconic documentation (pylabrobot/legacy/storage/liconic/liconic_backend_tests.py:52-55), and a TODO says a shaker command must still be found there (pylabrobot/legacy/storage/liconic/liconic_backend.py:369). Many methods are marked UNTESTED (pylabrobot/legacy/storage/liconic/liconic_backend.py:365-554).",
+ "steps_title": "Drive the real one",
+ "steps": [
+  "Connect the STX PLC by RS-232. The backend opens it at 9600 baud 8E1 with RTS/CTS (pylabrobot/legacy/storage/liconic/liconic_backend.py:80-90).",
+  "Create ExperimentalLiconicBackend(model=\"STX44_IC\", port=\"/dev/ttyUSB0\"); models are listed in pylabrobot/legacy/storage/liconic/constants.py:5-63.",
+  "Build Incubator(backend, racks=[...], ...) with liconic_rack_* racks matching the cassettes; cassette numbers follow the rack order (pylabrobot/legacy/storage/liconic/liconic_backend.py:141-147).",
+  "await stx.setup(): break, CR -> CC, ST 1801 -> OK, then RD 1915 until 1 (pylabrobot/legacy/storage/liconic/liconic_backend.py:96-139).",
+  "Put the plate on stx.loading_tray, then take_in_plate(site), fetch_plate_to_loading_tray(name), get_temperature() (pylabrobot/legacy/storage/incubator.py:111 and pylabrobot/legacy/storage/incubator.py:151-177).",
+  "Watch the shovel by eye on the first runs and file the upstream device test report (docs/user_guide/needs-testing.md:31-35)."
+ ],
+ "scenario": "Take 1 plate from the transfer station into cassette 1, position 1, fetch it back out to the transfer station, then read the temperature. Made-up slot and a made-up 37.0 deg C.",
+ "real": [
+  "Legacy upstream ExperimentalLiconicBackend and Incubator, unchanged",
+  "Every command string the backend writes, e.g. WR DM23 788, ST 1904",
+  "Error codes and messages, e.g. 00103 import lift transfer error"
+ ],
+ "simulated": [
+  "The STX44 PLC: parsing, CC/OK/1 replies, registers DM0 DM5 DM23 DM25",
+  "Plate location: transfer station, shovel, cassette slot; temperature",
+  "Faults: dropped reply to ST 1904; handler error 00103 on the shovel"
+ ],
+ "not_checked": [
+  "Any physical STX44; nothing here ran on hardware",
+  "Reply to WR and most ST commands assumed OK (TODO_1)",
+  "Real move times and plate position after a fault (TODO_2)"
+ ],
+ "limits": [
+  "Shaker, CO2, N2, swap station and sensor methods are marked UNTESTED; shaker_status raises NotImplementedError (pylabrobot/legacy/storage/liconic/liconic_backend.py:365-370 and pylabrobot/legacy/storage/liconic/liconic_backend.py:448-554).",
+  "A handling fault surfaces only after the 60 s ready poll times out, then RD 1814 and RD DM200 (pylabrobot/legacy/storage/liconic/liconic_backend.py:319-339).",
+  "The 104 mm rack step size 3563 does not fit the formula the tests use (pitch x 1713 / 50 gives 3769); a TODO says verify with hardware (pylabrobot/legacy/storage/liconic/liconic_backend_tests.py:42-50).",
+  "No non-legacy LiCONiC driver at this commit (docs/_static/devices.json:842-856, v0). The guide wants 1 plain class, Literal not enums, an untested warning (docs/contributor_guide/device-driver-guide.md:17 and docs/contributor_guide/device-driver-guide.md:25 and docs/contributor_guide/device-driver-guide.md:47)."
+ ],
+ "upstream_paths": [
+  "pylabrobot/legacy/storage/liconic/liconic_backend.py",
+  "pylabrobot/legacy/storage/liconic/constants.py",
+  "pylabrobot/legacy/storage/liconic/errors.py",
+  "pylabrobot/legacy/storage/liconic/racks.py",
+  "pylabrobot/legacy/storage/liconic/liconic_backend_tests.py",
+  "pylabrobot/legacy/storage/incubator.py",
+  "docs/contributor_guide/device-driver-guide.md"
+ ],
+ "sources": [
+  [
+   "liconic_backend.py at 182f92e",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend.py"
+  ],
+  [
+   "constants.py (models, error codes)",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/constants.py"
+  ],
+  [
+   "liconic_backend_tests.py",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/liconic/liconic_backend_tests.py"
+  ],
+  [
+   "Legacy Incubator frontend",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/storage/incubator.py"
+  ],
+  [
+   "Device driver guide",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md"
+  ],
+  [
+   "devices.json registry entry",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json"
+  ]
+ ]
+}

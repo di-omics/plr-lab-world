@@ -1,0 +1,88 @@
+{
+ "key": "star",
+ "name": "Hamilton Microlab STAR",
+ "order": 3,
+ "status": "in_plr",
+ "status_line": "In PyLabRobot. The real STARDriver sends text firmware commands over USB.",
+ "reaches": "USB, VID 0x08AF, PID 0x8000 (pylabrobot/hamilton/star/driver/master.py:81-82). The host speaks first: ASCII commands like C0TPid0117xp... Each reply repeats module, command and id, then er00/00 or an error code (pylabrobot/hamilton/protocol/text/framing.py:3-5 and pylabrobot/hamilton/protocol/text/framing.py:319-320).",
+ "decoded_from": "Upstream does not say how the commands were first obtained. Its code cites the firmware docs (pylabrobot/hamilton/protocol/text/framing.py:38), marks some codes as observed, not documented (pylabrobot/hamilton/star/driver/errors.py:349), and its debug page compares PLR commands with VENUS USB trace files (docs/user_guide/hamilton/star/debug.md:7-11).",
+ "steps_title": "Drive the real one",
+ "steps": [
+  "With Python 3.10 or newer, in a virtual environment: pip install \"pylabrobot[usb]\", which adds pyusb and libusb-package (docs/user_guide/getting-started/installation.md:3 and docs/user_guide/getting-started/installation.md:47).",
+  "Connect the STAR by its USB cable. On macOS also install libusb (brew install libusb); on Linux the docs list nothing more (docs/user_guide/getting-started/installation.md:90-100).",
+  "On Windows, with no Hamilton or VENUS software running, use Zadig to give \"ML Star\" the libusbK driver; restore the original driver for VENUS (docs/user_guide/getting-started/installation.md:108-144).",
+  "STARDriver() with no io opens the USB device itself, VID 0x08AF, PID 0x8000 (pylabrobot/hamilton/star/driver/master.py:145-152).",
+  "Build the deck as it stands, then star = STARlet(deck=deck) or STAR(deck=deck). Setup refuses a deck whose track count differs from the device's (pylabrobot/hamilton/star/driver/master.py:1155-1171).",
+  "await star.setup() reads the device, then initializes it, so it moves (pylabrobot/hamilton/star/driver/master.py:214). Then a first small step, such as picking up tips."
+ ],
+ "scenario": "Start-up conversation, then pick up 8 tips, aspirate 50 uL from column 1 of a source plate, dispense into column 1 of a destination plate, return the tips. Volumes made up.",
+ "real": [
+  "pylabrobot STARDriver, STARlet device and Pipettes feature, unchanged",
+  "Every frame the driver wrote: 274 commands; the log shows 7 kinds",
+  "Upstream liquid class: 50 uL asked goes out as av00551, 55.1 uL"
+ ],
+ "simulated": [
+  "The USB transport, every reply and the reply router's clock (sim.py)",
+  "Device state: tips per channel, liquid per tip, volume per well",
+  "A cut-down STARlet: 8 channels, no iSWAP, 96-head or autoload"
+ ],
+ "not_checked": [
+  "Nothing ran on a physical STAR",
+  "Reply values and padding beyond the upstream recording and test captures",
+  "Timing, motion, real liquid behaviour and real error codes for this move"
+ ],
+ "limits": [
+  "The device registry still points STAR at the legacy STARBackend, api v0 (docs/_static/devices.json:539-540).",
+  "Only the STAR recording was read off a device; the STARlet and STARplus ones are derived (pylabrobot/hamilton/star/driver/recordings/README.md:5-7 and pylabrobot/hamilton/star/driver/recordings/README.md:47).",
+  "50 uL becomes 55.1 uL: the 400 uL tip maps to the 300 uL water class StandardVolume_Water_DispenseSurface_Part, curve 50.0: 55.1 (pylabrobot/hamilton/star/liquid_classes/mapping.py:46 and pylabrobot/hamilton/star/liquid_classes/mapping.py:14004-14010).",
+  "Upstream's own STARSimulationDriver answers above the wire: nothing reaches it (pylabrobot/hamilton/star/driver/simulator.py:8), so wire replies here are this example's."
+ ],
+ "upstream_paths": [
+  "pylabrobot/hamilton/star/device.py",
+  "pylabrobot/hamilton/star/driver/master.py",
+  "pylabrobot/hamilton/star/driver/features/pipettes.py",
+  "pylabrobot/hamilton/protocol/text/router.py",
+  "pylabrobot/hamilton/protocol/text/framing.py",
+  "pylabrobot/hamilton/star/driver/errors.py",
+  "pylabrobot/hamilton/star/driver/simulator.py",
+  "pylabrobot/hamilton/star/liquid_classes/mapping.py"
+ ],
+ "sources": [
+  [
+   "Installation and USB interface",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/getting-started/installation.md"
+  ],
+  [
+   "Debugging STAR issues (VENUS trace files)",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/hamilton/star/debug.md"
+  ],
+  [
+   "STAR design notes",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/design.md"
+  ],
+  [
+   "STAR recordings README",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/recordings/README.md"
+  ],
+  [
+   "Device registry",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json"
+  ],
+  [
+   "STARDriver (master.py)",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/driver/master.py"
+  ],
+  [
+   "Reply framing",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/protocol/text/framing.py"
+  ],
+  [
+   "Legacy STAR tests (captured replies)",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/liquid_handling/backends/hamilton/STAR_tests.py"
+  ],
+  [
+   "STAR liquid classes (mapping.py)",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/hamilton/star/liquid_classes/mapping.py"
+  ]
+ ]
+}

@@ -1,0 +1,18 @@
+[project]
+name = "lab-hall-plr-examples"
+version = "0.1.0"
+description = "How software reaches each instrument of a simulated in vitro automation hall, shown with PyLabRobot. Simulation only."
+requires-python = ">=3.12"
+authors = [{ name = "di-omics" }]
+dependencies = [
+  "PyLabRobot[serial,usb,ftdi,xarm] @ git+https://github.com/PyLabRobot/pylabrobot@182f92eab9f81b1f50c43b833420642bf8b0fb02",
+  "plr-re @ git+https://github.com/di-omics/plr-reverse-engineer@264ca78",
+  "pytest>=9.1",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["stations", "harness"]
+addopts = "-q"

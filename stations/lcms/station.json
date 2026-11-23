@@ -1,0 +1,72 @@
+{
+ "key": "lcms",
+ "name": "Shared LC-MS bench",
+ "order": 9,
+ "status": "nothing_to_decode",
+ "status_line": "Not in PyLabRobot. The toolkit playbook's route, a Ready line and a Start line, needs no decoding.",
+ "reaches": "Rear remote connector: software reads a Ready line and closes a Start contact through opto-isolators (plr-reverse-engineer/instruments/agilent-6530-qtof/README.md:88-97). The vendor software holds the method. Raw files are picked up from a data folder.",
+ "decoded_from": "Nothing to decode for this route. Upstream has no LC, MS or autosampler driver (no match in pylabrobot/ or docs/_static/devices.json). The signals come from the toolkit playbook; its LAN control map is still in progress (plr-reverse-engineer/instruments/agilent-6530-qtof/README.md:164-165).",
+ "steps_title": "Stand it up",
+ "steps": [
+  "Find the model, photograph the rear panel and read the remote connector pinout from its manual; do not assume pin numbers (plr-reverse-engineer/instruments/agilent-6530-qtof/README.md:93-95).",
+  "Wire Ready, Start, Stop and ground through opto-isolators or relays; never wire GPIO straight to the instrument (plr-reverse-engineer/instruments/agilent-6530-qtof/WIRING.md:33-35).",
+  "Find the Ready line and its sense with the toolkit's line scan command (plr-reverse-engineer/plr_re/cli.py:63-77), then confirm Ready read-only before any Start.",
+  "Load the injection sequence and method in the vendor acquisition software.",
+  "With a person present, close Start for 1 injection and check that 1 raw file appears in the data folder.",
+  "Point the adapter at the data folder and match each injection to its raw file before the next Start."
+ ],
+ "scenario": "8 aliquots from 1 plate as an injection sequence: for each, check Ready, log the dry-run Start (nothing sent), wait for its raw file. A missing file holds; Ready low stops with the fault text.",
+ "real": [
+  "plr_re contact-closure controller and guards, in dry run (the example in the playbook)",
+  "The Start note the toolkit logs in dry run"
+ ],
+ "simulated": [
+  "The acquisition workstation, its Ready line and sequence",
+  "Raw files: 1 text stub per injection in a temporary folder",
+  "Aliquot ids, volumes, fault text"
+ ],
+ "not_checked": [
+  "Whether the hall's LC-MS has a remote Ready and Start connector",
+  "Any pin, polarity or pulse length on hardware",
+  "How long an injection takes and how the real raw files are named"
+ ],
+ "limits": [
+  "The toolkit's Start and Ready path has mock and dry-run tests only (plr-reverse-engineer/tests/test_plr_re.py:108-131 and plr-reverse-engineer/README.md:119-120); hardware validation is still to come (plr-reverse-engineer/instruments/agilent-6530-qtof/README.md:166).",
+  "In dry run start_run transmits nothing (plr-reverse-engineer/plr_re/instruments/agilent6530.py:97-103); the example relays the logged note to the simulator.",
+  "Start is 1 TTL line and carries no sample id (plr-reverse-engineer/instruments/agilent-6530-qtof/WIRING.md:10-20). The vendor sequence sets the order, so the adapter matches by row, with a file name rule made up here.",
+  "wait_ready sleeps for real (plr-reverse-engineer/plr_re/instruments/agilent6530.py:86-93), so the example reads is_ready once per injection instead."
+ ],
+ "upstream_paths": [
+  "docs/_static/devices.json"
+ ],
+ "sources": [
+  [
+   "Upstream device registry",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json"
+  ],
+  [
+   "Toolkit playbook (LC-MS example)",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/instruments/agilent-6530-qtof/README.md"
+  ],
+  [
+   "Toolkit playbook wiring",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/instruments/agilent-6530-qtof/WIRING.md"
+  ],
+  [
+   "Toolkit contact-closure controller",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/instruments/agilent6530.py"
+  ],
+  [
+   "Toolkit tests",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/tests/test_plr_re.py"
+  ],
+  [
+   "Toolkit README",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/README.md"
+  ],
+  [
+   "Toolkit example pin map",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/configs/agilent-pinmap.example.json"
+  ]
+ ]
+}

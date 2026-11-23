@@ -1,0 +1,17 @@
+name: tests
+on:
+  push:
+  pull_request:
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Tests
+        run: uv run pytest
+      - name: Harness walk
+        run: uv run python -m harness.walk
+      - name: ASCII only
+        run: |
+          if git ls-files -z | xargs -0 grep -nIP '[^\x00-\x7F]'; then exit 1; fi

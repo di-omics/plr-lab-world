@@ -1,0 +1,54 @@
+{
+ "key": "rail",
+ "name": "Rail-mounted transfer arm (linear track)",
+ "order": 5,
+ "status": "vendor_sdk",
+ "status_line": "Not in PyLabRobot yet, the maker's SDK documents it. The example writes the class.",
+ "reaches": "Through the xArm controller with xarm-python-sdk: the same XArmAPI object as the arm calls get/set_linear_motor_*; the SDK sends them as Modbus to the control box RS-485 (xarm-python-sdk xarm/x3/linear_motor.py:40-46).",
+ "decoded_from": "Nothing decoded. Names, units and return codes come from xarm-python-sdk 1.18.4 (xarm-python-sdk xarm/wrapper/xarm_api.py:3648-3805, xarm-python-sdk xarm/x3/linear_motor.py:82-219, xarm-python-sdk xarm/x3/code.py:52-54). A search of PyLabRobot 182f92e for linear track or linear motor finds nothing.",
+ "steps_title": "Stand it up",
+ "steps": [
+  "Read the track calls in the SDK: get_linear_motor_pos/status/error/on_zero/is_enabled and set_linear_motor_enable/back_origin/pos (xarm-python-sdk xarm/wrapper/xarm_api.py:3648-3805).",
+  "Write 1 plain class with async setup() and stop(); stop() restores the enable state setup() found (docs/contributor_guide/device-driver-guide.md:22-23).",
+  "Expose intent only: home() and move_to(mm) read the state, act only if needed, then confirm (docs/contributor_guide/device-driver-guide.md:39-41).",
+  "Issue moves with wait=False and confirm in Python: error register, then motion bit 0 clear (xarm-python-sdk xarm/wrapper/xarm_api.py:3669-3670), then the position report.",
+  "Log a warning in setup() that it is unverified (docs/contributor_guide/device-driver-guide.md:45-47); test it against a simulated SDK object first.",
+  "Teach the station positions on the real track and set a measured reply timeout before any real run."
+ ],
+ "scenario": "Home the track if it is not homed, travel to a taught station at 450 mm and 200 mm/s, confirm the arrival from the position report. Positions and speed are made up.",
+ "real": [
+  "Method names, arguments, units and return codes copied from xarm-python-sdk 1.18.4",
+  "Error register titles copied from the SDK code table"
+ ],
+ "simulated": [
+  "The SDK object: position, enable, homed, motion and error registers",
+  "Instant motion. lost_reply: the move runs, the position report after it never returns",
+  "Which error appears (13)"
+ ],
+ "not_checked": [
+  "Any physical track",
+  "linear_track.py itself on hardware",
+  "Real travel times and a sane timeout"
+ ],
+ "limits": [
+  "The SDK refuses set_linear_motor_pos with code 82 until on_zero is 1, so on_zero acts as a homed flag (xarm-python-sdk xarm/x3/linear_motor.py:158-161).",
+  "The SDK sends int(pos*2000) (xarm-python-sdk xarm/x3/linear_motor.py:166) but reports position as round(raw/2000), whole mm (xarm-python-sdk xarm/x3/linear_motor.py:58).",
+  "Stroke depends on the serial number: 0..700, 0..1000 or 0..1500 mm; speed 1..1000 mm/s (xarm-python-sdk xarm/wrapper/xarm_api.py:3795-3799).",
+  "The SDK's own wait polls every 0.1 s for up to 100 s by default and returns 80 on any error register (xarm-python-sdk xarm/x3/linear_motor.py:221-240).",
+  "After a hold or an error the example sends nothing more, so stop() does not run and the track stays enabled until a person checks it. The guide asks for cleanup on errors too (docs/contributor_guide/device-driver-guide.md:23); what is safe to send after an unknown outcome is an open point."
+ ],
+ "upstream_paths": [
+  "docs/contributor_guide/device-driver-guide.md",
+  "pylabrobot/ufactory/xarm6/xarm6.py"
+ ],
+ "sources": [
+  [
+   "PyLabRobot device-driver guide",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md"
+  ],
+  [
+   "xArm Python SDK API doc, master branch (linear motor calls)",
+   "https://raw.githubusercontent.com/xArm-Developer/xArm-Python-SDK/master/doc/api/xarm_api.md"
+  ]
+ ]
+}

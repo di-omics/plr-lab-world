@@ -1,0 +1,65 @@
+{
+ "key": "xarm",
+ "name": "UFACTORY xArm 6 plate arm",
+ "order": 6,
+ "status": "vendor_sdk",
+ "status_line": "In PyLabRobot (XArm6). It wraps the maker's published Python SDK, so there is no wire to decode.",
+ "reaches": "Ethernet to the xArm controller through xarm-python-sdk (docs/user_guide/ufactory/xarm6/hello-world.ipynb:12). XArmAPI(ip) is created in setup(), then each operation is 1 blocking SDK call run in a thread (pylabrobot/ufactory/xarm6/xarm6.py:86).",
+ "decoded_from": "Nothing decoded. The driver calls the maker's SDK (pylabrobot/ufactory/xarm6/xarm6.py:120-122) and checks only its return code (pylabrobot/ufactory/xarm6/xarm6.py:60-95). The registry lists it as status basic (docs/_static/devices.json:2132).",
+ "steps_title": "Drive the real one",
+ "steps": [
+  "Install the optional SDK extra: pip install PyLabRobot[xarm] (docs/user_guide/ufactory/xarm6/hello-world.ipynb:12).",
+  "Create XArm6(ip=..., tcp_offset=...) with the controller IP and your gripper mount offset, then await setup().",
+  "Teach the hotel and reader poses: start_freedrive_mode(free_axes=[0]), request_gripper_pose(), stop_freedrive_mode() (docs/user_guide/ufactory/xarm6/hello-world.ipynb:282).",
+  "Open with move_gripper(width=max_gripper_width). The driver's default jaw range is 71 to 150 mm (pylabrobot/ufactory/xarm6/xarm6.py:41-42): set it to your gripper.",
+  "Wrap pick_up_at_location and drop_at_location with your own above-pose moves; they only move and grip (pylabrobot/ufactory/xarm6/xarm6.py:270-271).",
+  "Put a timeout around each call and check the plate yourself; the driver reports no plate-held state."
+ ],
+ "scenario": "Carry 1 plate from a hotel nest to the reader nest: above pick, open, descend, close, lift, above place, descend, open, retreat. All poses are made up.",
+ "real": [
+  "Upstream pylabrobot.ufactory.xarm6.XArm6 at 182f92e",
+  "Every SDK call and argument it makes",
+  "Its error raising (XArm6Error)"
+ ],
+ "simulated": [
+  "The XArmAPI object: pose, jaws, error and state codes",
+  "Where the plate is",
+  "The SDK return codes, copied from xarm-python-sdk 1.18.4"
+ ],
+ "not_checked": [
+  "Any physical arm or bio-gripper",
+  "Real move times and a sane timeout (TODO_1)",
+  "Whether the gripper moves while the arm is in an error state"
+ ],
+ "limits": [
+  "A return code of 0 or None is success: _call_sdk never reads the arm error_code or state (pylabrobot/ufactory/xarm6/xarm6.py:91). For non-move calls the SDK maps codes 1, 2 and 9 to 0 (xarm-python-sdk xarm/x3/base.py:2179).",
+  "A grip width outside the range is clamped to it with no error, 71 to 150 mm by default (pylabrobot/ufactory/xarm6/xarm6.py:149-152).",
+  "No plate-held query. is_gripper_closed() only compares the reported width to 73 mm by default (pylabrobot/ufactory/xarm6/xarm6.py:185-188 and pylabrobot/ufactory/xarm6/xarm6.py:43).",
+  "move_gohome is retried once after clear_errors (pylabrobot/ufactory/xarm6/xarm6.py:205-212); moves are not retried (pylabrobot/ufactory/xarm6/xarm6.py:239-251)."
+ ],
+ "upstream_paths": [
+  "pylabrobot/ufactory/xarm6/xarm6.py",
+  "pylabrobot/ufactory/xarm6/joints.py",
+  "pylabrobot/ufactory/xarm6/xarm6_tests.py",
+  "docs/user_guide/ufactory/xarm6/hello-world.ipynb",
+  "docs/_static/devices.json"
+ ],
+ "sources": [
+  [
+   "xarm6.py",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6.py"
+  ],
+  [
+   "xarm6_tests.py",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/ufactory/xarm6/xarm6_tests.py"
+  ],
+  [
+   "xArm 6 hello-world notebook",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/user_guide/ufactory/xarm6/hello-world.ipynb"
+  ],
+  [
+   "devices.json",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json"
+  ]
+ ]
+}

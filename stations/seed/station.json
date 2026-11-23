@@ -1,0 +1,71 @@
+{
+ "key": "seed",
+ "name": "Agilent BioTek EL406",
+ "order": 2,
+ "status": "in_plr",
+ "status_line": "In PyLabRobot, v1 class EL406, registry status mostly (docs/_static/devices.json:120-122). Binary frames over FTDI USB.",
+ "reaches": "FTDI USB, 38400 baud 8N2, no flow control. Host speaks first: 11-byte header (cmd, length, checksum), payload (pylabrobot/agilent/biotek/el406/protocol.py:15-25). Reply: ACK 0x06, header, data (pylabrobot/agilent/biotek/el406/el406.py:318-319). Steps polled by 0x92 (pylabrobot/agilent/biotek/el406/el406.py:595).",
+ "decoded_from": "The v1 code names no source for the protocol. Legacy wash tests check bytes against reference captures from real EL406 hardware (pylabrobot/legacy/plate_washing/biotek/el406/steps_wash_tests.py:570-571). Some limits are labelled as the vendor GUI's (pylabrobot/agilent/biotek/el406/peristaltic_dispenser.py:176 and pylabrobot/agilent/biotek/el406/el406.py:1015-1018).",
+ "steps_title": "Drive the real one",
+ "steps": [
+  "Connect the EL406 by USB. setup() opens it as an FTDI device at 38400 baud 8N2, no flow control (pylabrobot/agilent/biotek/el406/el406.py:147-157).",
+  "Create EL406(name=\"el406\", device_id=<FTDI serial>); the FTDI layer refuses to pick when several devices match (pylabrobot/io/ftdi.py:601-606 and pylabrobot/agilent/biotek/el406/el406.py:84).",
+  "await el406.setup(): it sends TEST_COMM 0x73, INIT_STATE 0xA0, then a full RESET 0x70 unless skip_reset=True (pylabrobot/agilent/biotek/el406/el406.py:178-186 and pylabrobot/agilent/biotek/el406/el406.py:290-303).",
+  "el406.set_plate(plate) with the PLR plate really loaded: 96, 384 or 1536 wells only (pylabrobot/agilent/biotek/el406/el406.py:113-119 and pylabrobot/agilent/biotek/el406/helpers.py:67-74).",
+  "In async with el406.batch(): peristaltic_dispenser.prime(volume=...), .dispense(volumes={col: uL}) (pylabrobot/agilent/biotek/el406/peristaltic_dispenser.py:83-94 and pylabrobot/agilent/biotek/el406/peristaltic_dispenser.py:139-145).",
+  "await el406.stop(). Check the wells by eye and file the upstream device test report (docs/user_guide/needs-testing.md:31-35)."
+ ],
+ "scenario": "Seed cells into a 384-well plate: set up, open a batch, prime the peristaltic lines with 500 uL, dispense 40 uL into every well (24 columns), close the batch. Made-up round volumes.",
+ "real": [
+  "Upstream EL406 class and its peristaltic dispenser, unchanged",
+  "Every frame byte the driver writes, incl. the 0x8F dispense frame",
+  "Error code table and message for 0x1355"
+ ],
+ "simulated": [
+  "The EL406: frame and checksum decoding, replies, poll states",
+  "Device state: plate type, prime volume, uL per column, steps",
+  "Faults: dropped dispense reply; error 0x1355 in place of the dispense"
+ ],
+ "not_checked": [
+  "Any physical EL406; nothing here ran on hardware",
+  "Real reply header bytes beyond length and command echo (TODO_1)",
+  "Real busy time and post-fault state of a step (TODO_2)"
+ ],
+ "limits": [
+  "No tests for the v1 class: pylabrobot/agilent/biotek/el406/ has no *_tests.py; wire tests are legacy only, with a canned MockFTDI (pylabrobot/legacy/plate_washing/biotek/el406/mock_tests.py:72).",
+  "Replies are not checked: the driver reads only the length at header bytes 7-8 and ignores markers and checksum (pylabrobot/agilent/biotek/el406/el406.py:364-371).",
+  "batch() first sends 7 unnamed commands (0xBF ... 0x010A) and only logs a warning if they fail (pylabrobot/agilent/biotek/el406/el406.py:724-731).",
+  "Docstrings say the plate comes from the plate_holder (pylabrobot/agilent/biotek/el406/el406.py:682 and pylabrobot/agilent/biotek/el406/el406.py:1021), but only set_plate() sets it (pylabrobot/agilent/biotek/el406/el406.py:113-119)."
+ ],
+ "upstream_paths": [
+  "pylabrobot/agilent/biotek/el406/el406.py",
+  "pylabrobot/agilent/biotek/el406/protocol.py",
+  "pylabrobot/agilent/biotek/el406/peristaltic_dispenser.py",
+  "pylabrobot/agilent/biotek/el406/syringe_dispenser.py",
+  "pylabrobot/agilent/biotek/el406/error_codes.py",
+  "pylabrobot/agilent/biotek/el406/helpers.py",
+  "docs/_static/devices.json"
+ ],
+ "sources": [
+  [
+   "el406.py at 182f92e",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/el406.py"
+  ],
+  [
+   "protocol.py (framing, checksum)",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/protocol.py"
+  ],
+  [
+   "peristaltic_dispenser.py",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/agilent/biotek/el406/peristaltic_dispenser.py"
+  ],
+  [
+   "devices.json registry entry",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json"
+  ],
+  [
+   "Legacy wash tests (reference captures)",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/legacy/plate_washing/biotek/el406/steps_wash_tests.py"
+  ]
+ ]
+}

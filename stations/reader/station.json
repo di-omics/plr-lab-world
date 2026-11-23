@@ -1,0 +1,93 @@
+{
+ "key": "reader",
+ "name": "BMG LABTECH PHERAstar FSX",
+ "order": 8,
+ "status": "not_in_plr",
+ "status_line": "Not in PyLabRobot. Upstream drives 2 other BMG readers; this one's commands are unknown.",
+ "reaches": "Unknown. Upstream's 2 BMG readers share 1 framing module: the CLARIOstar speaks FTDI frames (STX, size, header, payload, 24-bit sum, CR) or USB packets, the VANTAstar USB only. The host asks, then polls status.",
+ "decoded_from": "Nothing decoded. The example runs the method on a synthetic reader whose payloads are the text TODO_1..TODO_4. Upstream has no PHERAstar code; its registry lists only CLARIOstar and VANTAstar for BMG (docs/_static/devices.json:253-287).",
+ "steps_title": "Decode it",
+ "steps": [
+  "Check how it enumerates on USB (FTDI bridge or native USB, VID and PID) against the 2 BMG readers upstream drives (pylabrobot/bmg_labtech/clariostar/driver/framing.py:6 and pylabrobot/bmg_labtech/vantastar/driver/framing.py:4).",
+  "Capture the vendor software doing 1 action at a time (tray out, tray in, 1 read), marking each action, with plr-re capture and marks.",
+  "Test the sibling framing on the capture: does every frame fit the FTDI frame or the USB packet layout (pylabrobot/bmg_labtech/protocol/framing.py:3-17)?",
+  "Map status and error replies before any motion: which bits mean busy, tray out, refused, error, and which codes come back.",
+  "Write the 1-class driver and replay the captured transcripts as tests through a fake transport, per the device-driver guide section 5.",
+  "First live command read-only (status), then the tray, then a read of an empty plate, with a person at the reader."
+ ],
+ "scenario": "A stand-in for the vendor software moves the tray out and in and reads a 384-well plate on a synthetic reader; the frames are captured, decoded, replayed behind guards, then read by a draft class.",
+ "real": [
+  "Upstream BMG framing functions build and check every frame",
+  "plr_re Marks, load_serial_log, diff_frames, scan_modbus_stream, ProtocolMap, GuardedReplayer"
+ ],
+ "simulated": [
+  "The reader, its tray, plate and 384 made-up values",
+  "Every command payload: ASCII TODO_1..TODO_4, not PHERAstar bytes",
+  "The vendor software session that was captured"
+ ],
+ "not_checked": [
+  "Any PHERAstar byte, port, header, status bit or error code",
+  "Whether the PHERAstar shares the CLARIOstar and VANTAstar framing",
+  "The draft class on any hardware"
+ ],
+ "limits": [
+  "BMG's page says its readers can be controlled through ActiveX, DDE and SiLA interfaces, documented in its software manuals. That route may need no wire decoding.",
+  "Same maker as 2 decoded readers is a hypothesis to test first, not a result. Upstream lists CLARIOstar firmware 1.35 only as checked on hardware (pylabrobot/bmg_labtech/clariostar/driver/confirmed_firmware_versions.py:5).",
+  "plr_re replays a stored frame and reads once (plr-reverse-engineer/plr_re/replay.py:99-102), 512 bytes by default (plr-reverse-engineer/plr_re/transports.py:24). The example reads the rest of the 780-byte reply itself.",
+  "plr_re splits only Modbus RTU streams (plr-reverse-engineer/plr_re/decode.py:132) and drops timestamps on load (plr-reverse-engineer/plr_re/decode.py:160-170). The example splits and groups by marks itself."
+ ],
+ "upstream_paths": [
+  "pylabrobot/bmg_labtech/protocol/framing.py",
+  "pylabrobot/bmg_labtech/protocol/errors.py",
+  "pylabrobot/bmg_labtech/clariostar/driver/framing.py",
+  "pylabrobot/bmg_labtech/clariostar/driver/master.py",
+  "pylabrobot/bmg_labtech/clariostar/driver/confirmed_firmware_versions.py",
+  "pylabrobot/bmg_labtech/vantastar/driver/framing.py",
+  "pylabrobot/bmg_labtech/vantastar/driver/master.py",
+  "pylabrobot/bmg_labtech/vantastar/driver/responses.py",
+  "docs/contributor_guide/device-driver-guide.md",
+  "docs/_static/devices.json"
+ ],
+ "sources": [
+  [
+   "BMG LABTECH workflow automation",
+   "https://www.bmglabtech.com/en/workflow-automation/"
+  ],
+  [
+   "Upstream BMG framing",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/bmg_labtech/protocol/framing.py"
+  ],
+  [
+   "Upstream VANTAstar reply format",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/pylabrobot/bmg_labtech/vantastar/driver/responses.py"
+  ],
+  [
+   "Upstream device-driver guide",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/contributor_guide/device-driver-guide.md"
+  ],
+  [
+   "Upstream device registry",
+   "https://github.com/PyLabRobot/pylabrobot/blob/182f92eab9f81b1f50c43b833420642bf8b0fb02/docs/_static/devices.json"
+  ],
+  [
+   "plr-re capture and marks",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/capture.py"
+  ],
+  [
+   "plr-re decode",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/decode.py"
+  ],
+  [
+   "plr-re guarded replay",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/replay.py"
+  ],
+  [
+   "plr-re byte connections",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/transports.py"
+  ],
+  [
+   "plr-re protocol map",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca78/plr_re/protocolmap.py"
+  ]
+ ]
+}

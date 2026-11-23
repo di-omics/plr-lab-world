@@ -1,0 +1,46 @@
+{
+ "key": "culture",
+ "name": "Tissue-culture station",
+ "order": 1,
+ "status": "open_choice",
+ "status_line": "Supplier and interface are still open, so there is no protocol to show yet.",
+ "reaches": "Not decided. The example uses a made-up stand-in: 1 JSON message per release, the adapter speaks first, the station acknowledges or refuses. A real adapter would wrap what the chosen supplier documents.",
+ "decoded_from": "Nothing decoded and nothing to decode yet. The message format, the error name unknown_batch and the ids are invented for this stand-in (TODO_1: the real interface). The questions below come from the toolkit's APPROACH.md and PREFLIGHT.md.",
+ "steps_title": "Decide it",
+ "steps": [
+  "Does it have an external serial, USB or Ethernet port, so a teardown can be skipped? (plr-reverse-engineer/APPROACH.md:19-20)",
+  "Does the vendor PC app drive it over a link you can mirror and capture, 1 setpoint at a time? (plr-reverse-engineer/APPROACH.md:71-82)",
+  "Is there a Ready, Start and Stop remote connector you could use as a minimal first tier? (plr-reverse-engineer/APPROACH.md:22-43)",
+  "Which commands are read-only telemetry and which actuate, so you can arm them separately? (plr-reverse-engineer/APPROACH.md:3-6 and plr-reverse-engineer/APPROACH.md:45-51)",
+  "Can your software be the sole master with the vendor app closed? (plr-reverse-engineer/APPROACH.md:92-93)",
+  "Which limits and interlocks stay on the instrument, and can you stay out of its internals? (plr-reverse-engineer/APPROACH.md:5-6 and plr-reverse-engineer/PREFLIGHT.md:7-8)"
+ ],
+ "scenario": "Release 1 cell batch for seeding and check that the receiving worklist names that batch in every row. Batch and worklist ids are made up.",
+ "real": [
+  "Nothing from an instrument: no supplier is chosen"
+ ],
+ "simulated": [
+  "The station, its known batches and its releases",
+  "The stand-in message format and its replies"
+ ],
+ "not_checked": [
+  "Any culture instrument or its interface",
+  "Whether a real station acknowledges releases at all"
+ ],
+ "limits": [
+  "lost_reply maps to a release sent with no acknowledgement: hold, never resend (stations/culture/drive.py:37-39).",
+  "device_error maps to the stand-in refusing the release with a made-up error name, unknown_batch (stations/culture/sim.py:37-38).",
+  "Nothing in PyLabRobot 182f92e is used here; the adapter is this example's own code."
+ ],
+ "upstream_paths": [],
+ "sources": [
+  [
+   "PREFLIGHT.md",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca785916ed117147431490e6dd4b263336b4f/PREFLIGHT.md"
+  ],
+  [
+   "APPROACH.md",
+   "https://github.com/di-omics/plr-reverse-engineer/blob/264ca785916ed117147431490e6dd4b263336b4f/APPROACH.md"
+  ]
+ ]
+}

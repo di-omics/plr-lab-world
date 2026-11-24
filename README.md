@@ -11,7 +11,7 @@ For every station the question is the same: is the instrument already decoded?
   that decodes the frames the driver sends.
 - The maker publishes an SDK: nothing to decode. The example wraps the SDK.
 - No: the example shows the method (capture, decode, replay behind guards) on a synthetic
-  instrument whose payloads are placeholders.
+  instrument whose payloads are placeholders, written `TODO_1` to `TODO_4`.
 
 ## Run it
 
@@ -53,5 +53,7 @@ Station keys, in walk order: culture, seed, star, inc, rail, xarm, hotel, reader
 - Nothing here ran on a physical instrument.
 - A simulated instrument answers only the commands its example sends.
 - Every volume, position, temperature and timing is a made-up round number.
+- `TODO_n` is a placeholder used on purpose: a payload not yet decoded, or a fact about the real
+  instrument not yet known.
 - A replay is a recording of a simulation, not a video of a machine.
 - Pinned to PyLabRobot commit 182f92e (23 Nov 2026) and plr-reverse-engineer 264ca78.

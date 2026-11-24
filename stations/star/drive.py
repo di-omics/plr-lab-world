@@ -66,13 +66,15 @@ class _SimClock:
     return time.time() + self.sim.clock_offset
 
 
-async def run(fault: Optional[str] = None, log=print) -> dict:
-  """Run the example once, in simulation only."""
+async def run(fault: Optional[str] = None, log=print, watch=None) -> dict:
+  """Run the example once, in simulation only. watch(sim) sees the simulator once, first."""
   def tap(tag: str, text: str) -> None:
     if tag == "state " or text[:4] in SHOWN or text.startswith("(nothing"):
       log(tag + (text if len(text) <= 94 else text[:91] + "..."))
 
   sim = SimulatedSTARlet(fault=fault, tap=tap)
+  if watch is not None:
+    watch(sim)
   star, tips, source, dest = build(sim)
   sim.load(
     wells={f"{p.name}:{w.get_identifier()}": _point(w, star.deck) for p in (source, dest)

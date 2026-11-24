@@ -1,0 +1,217 @@
+{
+ "case": "device_error",
+ "evidence": "STARFirmwareError: C0ASid0176er99/00 P106/70",
+ "name": "Hamilton Microlab STAR",
+ "outcome": "error",
+ "simulated": true,
+ "station": "star",
+ "steps": [
+  {
+   "i": 0,
+   "state": {
+    "dest_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "initialized": false,
+    "source_uL": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "tip_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tips_in_rack": 96,
+    "tips_on_channel": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   "tag": "ask",
+   "text": "set up; 8 tips; 50 uL from source col 1 to destination col 1; return tips"
+  },
+  {
+   "i": 1,
+   "state": null,
+   "tag": "send",
+   "text": "C0RMid0001"
+  },
+  {
+   "i": 2,
+   "state": null,
+   "tag": "recv",
+   "text": "C0RMid0001er00/00kb01kp08"
+  },
+  {
+   "i": 3,
+   "state": null,
+   "tag": "send",
+   "text": "C0VIid0034"
+  },
+  {
+   "i": 4,
+   "state": {
+    "dest_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "initialized": true,
+    "source_uL": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "tip_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tips_in_rack": 96,
+    "tips_on_channel": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   "tag": "recv",
+   "text": "C0VIid0034er00/00"
+  },
+  {
+   "i": 5,
+   "state": null,
+   "tag": "send",
+   "text": "C0DIid0036xp08000&yp4050 3783 3516 3249 2982 2715 2448 2181tp2450tz1220te3600tm1 1 1 1 1 1 ..."
+  },
+  {
+   "i": 6,
+   "state": null,
+   "tag": "recv",
+   "text": "C0DIid0036er00/00"
+  },
+  {
+   "i": 7,
+   "state": null,
+   "tag": "send",
+   "text": "C0TPid0117xp01179 01179 01179 01179 01179 01179 01179 01179yp1458 1368 1278 1188 1098 1008 ..."
+  },
+  {
+   "i": 8,
+   "state": {
+    "dest_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "initialized": true,
+    "source_uL": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "tip_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tips_in_rack": 88,
+    "tips_on_channel": [
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ]
+   },
+   "tag": "state",
+   "text": "tips on 8 of 8 channels"
+  },
+  {
+   "i": 9,
+   "state": null,
+   "tag": "recv",
+   "text": "C0TPid0117er00/00"
+  },
+  {
+   "i": 10,
+   "state": null,
+   "tag": "send",
+   "text": "C0ASid0176at0 0 0 0 0 0 0 0tm1 1 1 1 1 1 1 1xp02758 02758 02758 02758 02758 02758 02758 027..."
+  },
+  {
+   "i": 11,
+   "state": null,
+   "tag": "recv",
+   "text": "C0ASid0176er99/00 P106/70"
+  },
+  {
+   "i": 12,
+   "state": null,
+   "tag": "done",
+   "text": "error: STARFirmwareError: C0ASid0176er99/00 P106/70"
+  }
+ ]
+}

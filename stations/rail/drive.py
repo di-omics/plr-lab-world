@@ -28,9 +28,12 @@ async def travel(track: LinearTrack) -> int:
 # --8<-- end
 
 
-async def run(fault: Optional[str] = None, log: Callable[[str], None] = print) -> dict:
-  """Run the example once, in simulation only."""
+async def run(fault: Optional[str] = None, log: Callable[[str], None] = print,
+              watch: Optional[Callable[[object], None]] = None) -> dict:
+  """Run the example once, in simulation only. watch(sim) sees the simulator once, first."""
   sim = SimLinearTrack(travel_mm=700, fault=fault)
+  if watch is not None:
+    watch(sim)
   sim.log = log
   track = LinearTrack(travel_mm=700, arm=sim, reply_timeout=0.2, poll_interval=0)
   out = {"station": STATION, "sim": sim}

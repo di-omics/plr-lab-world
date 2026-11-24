@@ -1,0 +1,118 @@
+{
+ "station": "reader",
+ "name": "BMG LABTECH PHERAstar FSX",
+ "case": "device_error",
+ "outcome": "error",
+ "evidence": "fixture: reader answered an error frame, code 0x0007 (placeholder)",
+ "simulated": true,
+ "steps": [
+  {
+   "i": 0,
+   "tag": "state",
+   "text": "start: reader",
+   "state": {
+    "phase": "capture",
+    "tray": "in",
+    "busy": false,
+    "plates_read": 0,
+    "values": null
+   }
+  },
+  {
+   "i": 1,
+   "tag": "ask",
+   "text": "(a) capture: vendor stand-in does 3 actions, 1 at a time, each marked",
+   "state": null
+  },
+  {
+   "i": 2,
+   "tag": "state",
+   "text": "tray out",
+   "state": {
+    "phase": "capture",
+    "tray": "out",
+    "busy": false,
+    "plates_read": 0,
+    "values": null
+   }
+  },
+  {
+   "i": 3,
+   "tag": "state",
+   "text": "tray in",
+   "state": {
+    "phase": "capture",
+    "tray": "in",
+    "busy": false,
+    "plates_read": 0,
+    "values": null
+   }
+  },
+  {
+   "i": 4,
+   "tag": "ask",
+   "text": "(b) decode: framing, then group frames by action mark",
+   "state": null
+  },
+  {
+   "i": 5,
+   "tag": "state",
+   "text": "decode",
+   "state": {
+    "phase": "decode",
+    "tray": "in",
+    "busy": false,
+    "plates_read": 0,
+    "values": null
+   }
+  },
+  {
+   "i": 6,
+   "tag": "ask",
+   "text": "(c) replay TODO_3 (read) behind guards",
+   "state": null
+  },
+  {
+   "i": 7,
+   "tag": "state",
+   "text": "replay",
+   "state": {
+    "phase": "replay",
+    "tray": "in",
+    "busy": true,
+    "plates_read": 0,
+    "values": null
+   }
+  },
+  {
+   "i": 8,
+   "tag": "send",
+   "text": "02 00 0e 3f 54 4f 44 4f 5f 33 00 02 17 0d",
+   "state": null
+  },
+  {
+   "i": 9,
+   "tag": "recv",
+   "text": "02 00 10 3f 45 52 52 00 07 00 01 1d 0d",
+   "state": null
+  },
+  {
+   "i": 10,
+   "tag": "state",
+   "text": "busy off, error reply",
+   "state": {
+    "phase": "replay",
+    "tray": "in",
+    "busy": false,
+    "plates_read": 0,
+    "values": null
+   }
+  },
+  {
+   "i": 11,
+   "tag": "done",
+   "text": "error: fixture: reader answered an error frame, code 0x0007 (placeholder)",
+   "state": null
+  }
+ ]
+}

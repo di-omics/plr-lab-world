@@ -1,0 +1,238 @@
+{
+ "case": "clean",
+ "evidence": "plate at reader nest, jaws at 850 of 850 units, error_code 0",
+ "name": "UFACTORY xArm 6 plate arm",
+ "outcome": "completed",
+ "simulated": true,
+ "station": "xarm",
+ "steps": [
+  {
+   "i": 0,
+   "state": {
+    "error_code": 0,
+    "jaw_max": 850,
+    "jaw_units": 850,
+    "plate_at": "hotel",
+    "pose": [
+     300.0,
+     0.0,
+     300.0
+    ]
+   },
+   "tag": "ask",
+   "text": "setup()"
+  },
+  {
+   "i": 1,
+   "state": null,
+   "tag": "state",
+   "text": "setup made 9 SDK calls, all returned 0; mode 0, state 0, gripper enabled True"
+  },
+  {
+   "i": 2,
+   "state": null,
+   "tag": "ask",
+   "text": "carry 1 plate: hotel nest -> reader nest"
+  },
+  {
+   "i": 3,
+   "state": null,
+   "tag": "send",
+   "text": "set_position(x=300,y=200,z=180,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"
+  },
+  {
+   "i": 4,
+   "state": {
+    "error_code": 0,
+    "jaw_max": 850,
+    "jaw_units": 850,
+    "plate_at": "hotel",
+    "pose": [
+     300.0,
+     200.0,
+     180.0
+    ]
+   },
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 5,
+   "state": null,
+   "tag": "send",
+   "text": "set_gripper_position(850,wait=True,speed=0)"
+  },
+  {
+   "i": 6,
+   "state": null,
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 7,
+   "state": null,
+   "tag": "send",
+   "text": "set_position(x=300,y=200,z=100,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"
+  },
+  {
+   "i": 8,
+   "state": {
+    "error_code": 0,
+    "jaw_max": 850,
+    "jaw_units": 850,
+    "plate_at": "hotel",
+    "pose": [
+     300.0,
+     200.0,
+     100.0
+    ]
+   },
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 9,
+   "state": null,
+   "tag": "send",
+   "text": "set_gripper_position(97,wait=True,speed=0)"
+  },
+  {
+   "i": 10,
+   "state": {
+    "error_code": 0,
+    "jaw_max": 850,
+    "jaw_units": 156,
+    "plate_at": "gripper",
+    "pose": [
+     300.0,
+     200.0,
+     100.0
+    ]
+   },
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 11,
+   "state": null,
+   "tag": "send",
+   "text": "set_position(x=300,y=200,z=180,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"
+  },
+  {
+   "i": 12,
+   "state": {
+    "error_code": 0,
+    "jaw_max": 850,
+    "jaw_units": 156,
+    "plate_at": "gripper",
+    "pose": [
+     300.0,
+     200.0,
+     180.0
+    ]
+   },
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 13,
+   "state": null,
+   "tag": "send",
+   "text": "set_position(x=300,y=-200,z=130,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"
+  },
+  {
+   "i": 14,
+   "state": {
+    "error_code": 0,
+    "jaw_max": 850,
+    "jaw_units": 156,
+    "plate_at": "gripper",
+    "pose": [
+     300.0,
+     -200.0,
+     130.0
+    ]
+   },
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 15,
+   "state": null,
+   "tag": "send",
+   "text": "set_position(x=300,y=-200,z=50,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"
+  },
+  {
+   "i": 16,
+   "state": {
+    "error_code": 0,
+    "jaw_max": 850,
+    "jaw_units": 156,
+    "plate_at": "gripper",
+    "pose": [
+     300.0,
+     -200.0,
+     50.0
+    ]
+   },
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 17,
+   "state": null,
+   "tag": "send",
+   "text": "set_gripper_position(850,wait=True,speed=0)"
+  },
+  {
+   "i": 18,
+   "state": {
+    "error_code": 0,
+    "jaw_max": 850,
+    "jaw_units": 850,
+    "plate_at": "reader",
+    "pose": [
+     300.0,
+     -200.0,
+     50.0
+    ]
+   },
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 19,
+   "state": null,
+   "tag": "send",
+   "text": "set_position(x=300,y=-200,z=130,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"
+  },
+  {
+   "i": 20,
+   "state": {
+    "error_code": 0,
+    "jaw_max": 850,
+    "jaw_units": 850,
+    "plate_at": "reader",
+    "pose": [
+     300.0,
+     -200.0,
+     130.0
+    ]
+   },
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 21,
+   "state": null,
+   "tag": "state",
+   "text": "plate at reader, pose [300, -200, 130], error_code 0"
+  },
+  {
+   "i": 22,
+   "state": null,
+   "tag": "done",
+   "text": "completed: plate at reader nest, jaws at 850 of 850 units, error_code 0"
+  }
+ ]
+}

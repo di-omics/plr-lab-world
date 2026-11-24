@@ -1,0 +1,139 @@
+{
+ "case": "clean",
+ "evidence": "sim: plate path shovel > cassette 1/1 > shovel > transfer; 37.0 deg C",
+ "name": "LiCONiC STX44 incubator",
+ "outcome": "completed",
+ "simulated": true,
+ "station": "inc",
+ "steps": [
+  {
+   "i": 0,
+   "state": {
+    "cassette": null,
+    "error": "",
+    "plate_at": "transfer",
+    "position": null,
+    "ready": true,
+    "temp_c": 37.0
+   },
+   "tag": "ask",
+   "text": "set up: break, CR handshake, activate handling, wait ready"
+  },
+  {
+   "i": 1,
+   "state": null,
+   "tag": "send",
+   "text": "CR | ST 1801 | RD 1915"
+  },
+  {
+   "i": 2,
+   "state": null,
+   "tag": "recv",
+   "text": "CC | OK | 1"
+  },
+  {
+   "i": 3,
+   "state": null,
+   "tag": "state",
+   "text": "plate at transfer, ready 1, error 00000, temp 37.0 deg C"
+  },
+  {
+   "i": 4,
+   "state": null,
+   "tag": "ask",
+   "text": "take the plate in from the transfer station to cassette 1, position 1"
+  },
+  {
+   "i": 5,
+   "state": {
+    "cassette": 1,
+    "error": "",
+    "plate_at": "cassette",
+    "position": 1,
+    "ready": true,
+    "temp_c": 37.0
+   },
+   "tag": "send",
+   "text": "WR DM0 1 | WR DM23 788 | WR DM25 22 | WR DM5 1 | ST 1904 | RD 1915 | ST 1903"
+  },
+  {
+   "i": 6,
+   "state": null,
+   "tag": "recv",
+   "text": "OK x5 | 1 | OK"
+  },
+  {
+   "i": 7,
+   "state": null,
+   "tag": "state",
+   "text": "plate at cassette 1/1, ready 1, error 00000, temp 37.0 deg C"
+  },
+  {
+   "i": 8,
+   "state": null,
+   "tag": "ask",
+   "text": "fetch the plate back out to the transfer station"
+  },
+  {
+   "i": 9,
+   "state": {
+    "cassette": null,
+    "error": "",
+    "plate_at": "transfer",
+    "position": null,
+    "ready": true,
+    "temp_c": 37.0
+   },
+   "tag": "send",
+   "text": "WR DM0 1 | WR DM23 788 | WR DM25 22 | WR DM5 1 | ST 1905 | RD 1915 | ST 1903"
+  },
+  {
+   "i": 10,
+   "state": null,
+   "tag": "recv",
+   "text": "OK x5 | 1 | OK"
+  },
+  {
+   "i": 11,
+   "state": null,
+   "tag": "state",
+   "text": "plate at transfer, ready 1, error 00000, temp 37.0 deg C"
+  },
+  {
+   "i": 12,
+   "state": null,
+   "tag": "ask",
+   "text": "read the temperature"
+  },
+  {
+   "i": 13,
+   "state": null,
+   "tag": "send",
+   "text": "RD DM982"
+  },
+  {
+   "i": 14,
+   "state": null,
+   "tag": "recv",
+   "text": "370"
+  },
+  {
+   "i": 15,
+   "state": null,
+   "tag": "state",
+   "text": "plate at transfer, ready 1, error 00000, temp 37.0 deg C"
+  },
+  {
+   "i": 16,
+   "state": null,
+   "tag": "state",
+   "text": "upstream warning: Liconic racks need to be configured manually on each setup"
+  },
+  {
+   "i": 17,
+   "state": null,
+   "tag": "done",
+   "text": "completed: sim: plate path shovel > cassette 1/1 > shovel > transfer; 37.0 deg C"
+  }
+ ]
+}

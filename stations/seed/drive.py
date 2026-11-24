@@ -64,9 +64,11 @@ class Tap:
     )
 
 
-async def run(fault: str | None = None, log=print) -> dict:
-  """Run the example once, in simulation only."""
+async def run(fault: str | None = None, log=print, watch=None) -> dict:
+  """Run the example once, in simulation only. watch(sim) sees the simulator once, first."""
   sim, clock = SimEL406(fault=fault), VirtualClock()
+  if watch is not None:
+    watch(sim)
   tap = Tap(sim, log)
   mod = importlib.import_module("pylabrobot.agilent.biotek.el406.el406")
   fake_time = SimpleNamespace(monotonic=clock.monotonic)

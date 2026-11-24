@@ -1,0 +1,99 @@
+{
+ "case": "lost_reply",
+ "evidence": "pickup sent 1 time, no confirmation; slot 5 stays reserved",
+ "name": "Passive plate hotel",
+ "outcome": "hold",
+ "simulated": true,
+ "station": "hotel",
+ "steps": [
+  {
+   "i": 0,
+   "state": {
+    "clock_s": 0.0,
+    "dwell_s": 600.0,
+    "occupied": [],
+    "pickups": 0,
+    "reserved": [],
+    "slots": 24
+   },
+   "tag": "ask",
+   "text": "reserve slot 5, place, dwell 600 s, pick up"
+  },
+  {
+   "i": 1,
+   "state": {
+    "clock_s": 0.0,
+    "dwell_s": 600.0,
+    "occupied": [],
+    "pickups": 0,
+    "reserved": [
+     5
+    ],
+    "slots": 24
+   },
+   "tag": "send",
+   "text": "place slot=5 plate=assay_plate_1"
+  },
+  {
+   "i": 2,
+   "state": {
+    "clock_s": 0.0,
+    "dwell_s": 600.0,
+    "occupied": [
+     5
+    ],
+    "pickups": 0,
+    "reserved": [
+     5
+    ],
+    "slots": 24
+   },
+   "tag": "recv",
+   "text": "place ok slot=5"
+  },
+  {
+   "i": 3,
+   "state": {
+    "clock_s": 600.0,
+    "dwell_s": 600.0,
+    "occupied": [
+     5
+    ],
+    "pickups": 0,
+    "reserved": [
+     5
+    ],
+    "slots": 24
+   },
+   "tag": "state",
+   "text": "t=600 s, dwell done: True"
+  },
+  {
+   "i": 4,
+   "state": null,
+   "tag": "send",
+   "text": "pickup slot=5 plate=assay_plate_1"
+  },
+  {
+   "i": 5,
+   "state": {
+    "clock_s": 600.0,
+    "dwell_s": 600.0,
+    "occupied": [],
+    "pickups": 1,
+    "reserved": [
+     5
+    ],
+    "slots": 24
+   },
+   "tag": "state",
+   "text": "model slot 5: assay_plate_1; shelf 5: None; reserved: [5]"
+  },
+  {
+   "i": 6,
+   "state": null,
+   "tag": "done",
+   "text": "hold: pickup sent 1 time, no confirmation; slot 5 stays reserved"
+  }
+ ]
+}

@@ -1,0 +1,150 @@
+{
+ "station": "xarm",
+ "name": "UFACTORY xArm 6 plate arm",
+ "case": "clean",
+ "outcome": "completed",
+ "evidence": "fixture: plate at reader nest, jaws at 850 of 850 units",
+ "simulated": true,
+ "steps": [
+  {
+   "i": 0,
+   "tag": "state",
+   "text": "start: xarm",
+   "state": {
+    "pose": [
+     300,
+     200,
+     180
+    ],
+    "jaw_units": 850,
+    "jaw_max": 850,
+    "plate_at": "hotel",
+    "error_code": 0
+   }
+  },
+  {
+   "i": 1,
+   "tag": "ask",
+   "text": "carry 1 plate: hotel nest -> reader nest",
+   "state": null
+  },
+  {
+   "i": 2,
+   "tag": "send",
+   "text": "set_position(x=300,y=200,z=100,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)",
+   "state": null
+  },
+  {
+   "i": 3,
+   "tag": "recv",
+   "text": "0",
+   "state": null
+  },
+  {
+   "i": 4,
+   "tag": "state",
+   "text": "pose down",
+   "state": {
+    "pose": [
+     300,
+     200,
+     100
+    ],
+    "jaw_units": 850,
+    "jaw_max": 850,
+    "plate_at": "hotel",
+    "error_code": 0
+   }
+  },
+  {
+   "i": 5,
+   "tag": "send",
+   "text": "set_gripper_position(97,wait=True,speed=0)",
+   "state": null
+  },
+  {
+   "i": 6,
+   "tag": "recv",
+   "text": "0",
+   "state": null
+  },
+  {
+   "i": 7,
+   "tag": "state",
+   "text": "plate in the gripper",
+   "state": {
+    "pose": [
+     300,
+     200,
+     100
+    ],
+    "jaw_units": 97,
+    "jaw_max": 850,
+    "plate_at": "gripper",
+    "error_code": 0
+   }
+  },
+  {
+   "i": 8,
+   "tag": "send",
+   "text": "set_position(x=300,y=-200,z=130,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)",
+   "state": null
+  },
+  {
+   "i": 9,
+   "tag": "recv",
+   "text": "0",
+   "state": null
+  },
+  {
+   "i": 10,
+   "tag": "state",
+   "text": "pose over the reader",
+   "state": {
+    "pose": [
+     300,
+     -200,
+     50
+    ],
+    "jaw_units": 97,
+    "jaw_max": 850,
+    "plate_at": "gripper",
+    "error_code": 0
+   }
+  },
+  {
+   "i": 11,
+   "tag": "send",
+   "text": "set_gripper_position(850,wait=True,speed=0)",
+   "state": null
+  },
+  {
+   "i": 12,
+   "tag": "state",
+   "text": "plate at reader",
+   "state": {
+    "pose": [
+     300,
+     -200,
+     50
+    ],
+    "jaw_units": 850,
+    "jaw_max": 850,
+    "plate_at": "reader",
+    "error_code": 0
+   }
+  },
+  {
+   "i": 13,
+   "tag": "recv",
+   "text": "0",
+   "state": null
+  },
+  {
+   "i": 14,
+   "tag": "done",
+   "text": "completed: fixture: plate at reader nest, jaws at 850 of 850 units",
+   "state": null
+  }
+ ]
+}

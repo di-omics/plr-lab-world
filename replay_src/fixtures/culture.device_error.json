@@ -1,0 +1,47 @@
+{
+ "station": "culture",
+ "name": "Tissue-culture station",
+ "case": "device_error",
+ "outcome": "error",
+ "evidence": "fixture: station refused: unknown_batch",
+ "simulated": true,
+ "steps": [
+  {
+   "i": 0,
+   "tag": "state",
+   "text": "start: culture",
+   "state": {
+    "released": {},
+    "executed": 0,
+    "known_batches": [
+     "CB-0001",
+     "CB-0002"
+    ]
+   }
+  },
+  {
+   "i": 1,
+   "tag": "ask",
+   "text": "release CB-0001 for seeding against worklist WL-7",
+   "state": null
+  },
+  {
+   "i": 2,
+   "tag": "send",
+   "text": "{\"op\": \"release\", \"batch\": \"CB-0001\", \"worklist\": \"WL-7\"}",
+   "state": null
+  },
+  {
+   "i": 3,
+   "tag": "recv",
+   "text": "{\"ok\": false, \"error\": \"unknown_batch\"}",
+   "state": null
+  },
+  {
+   "i": 4,
+   "tag": "done",
+   "text": "error: fixture: station refused: unknown_batch",
+   "state": null
+  }
+ ]
+}

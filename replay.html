@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab Hall Replay</title>
+<style>/* Replay page. Pure white, type first. Drawings are small squares, lines and bars in greys. */
+:root{--paper:#ffffff;--ink:#111111;--soft:#62666b;--hair:#e3e3e1;--wash:#f6f6f4;
+--mid:#9a9da1;--light:#cfd0ce;--alert:#a33a32;
+--sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
+--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+html{background:#ffffff}
+body{background:#ffffff;color:#111111;font-family:var(--sans);font-weight:300;
+font-size:17px;line-height:1.55;margin:0;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding-block:72px 120px;
+padding-left:max(16px,env(safe-area-inset-left,0px));
+padding-right:max(16px,env(safe-area-inset-right,0px));background:#ffffff}
+a{color:var(--ink);text-decoration-color:var(--hair);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ink)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+h1{font-weight:200;font-size:clamp(36px,7vw,64px);line-height:1.04;letter-spacing:-0.02em;
+margin:0 0 20px;text-wrap:balance;color:var(--ink)}
+h2,.label{font-weight:400;font-size:12px;letter-spacing:0.09em;text-transform:uppercase;
+color:var(--soft);margin:0 0 10px}
+p{margin:0 0 14px;max-width:66ch}
+.eyebrow{font-size:13px;letter-spacing:0.09em;text-transform:uppercase;color:var(--soft);
+margin:0 0 12px}
+.eyebrow span,.sep{color:var(--hair);padding:0 6px}
+.small{font-size:14px;color:var(--soft);max-width:none}
+.fixture{font-size:14px;color:var(--ink);border-left:2px solid var(--ink);padding-left:10px}
+
+/* Pickers and controls: real buttons, written as text. */
+.row{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0;padding:0;list-style:none}
+.pick{margin-top:44px}
+.pick + .pick{margin-top:22px}
+button.t{font:inherit;font-size:15px;font-weight:300;color:var(--ink);background:#ffffff;
+border:0;border-bottom:1px solid transparent;border-radius:0;padding:2px 0;cursor:pointer}
+button.t:hover{border-bottom-color:var(--hair)}
+button.t[aria-pressed="true"]{border-bottom-color:var(--ink);font-weight:400}
+button.t .n{color:var(--soft);font-variant-numeric:tabular-nums;padding-right:5px}
+.about{margin:14px 0 0;font-size:15px}
+.about b{font-weight:400}
+.controls{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin-top:30px}
+button.c{font:inherit;font-size:14px;font-weight:400;color:var(--ink);background:#ffffff;
+border:1px solid var(--ink);border-radius:0;padding:6px 14px;cursor:pointer;min-width:64px}
+button.c:hover{background:var(--wash)}
+button.c[aria-pressed="true"]{background:var(--ink);color:#ffffff}
+.controls .gap{width:14px}
+.pos{font-size:14px;color:var(--soft);font-variant-numeric:tabular-nums;margin-left:6px}
+
+/* Stage: 2 columns on desktop, stacked on a phone. */
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;margin-top:30px;
+border-top:1px solid var(--hair);padding-top:24px}
+.stage > div{min-width:0}
+.wire{background:var(--wash);max-height:460px;overflow:auto;padding:14px 16px}
+.wire ol{list-style:none;margin:0;padding:0;width:max-content;min-width:100%}
+.wire li{display:grid;grid-template-columns:4.6em max-content;gap:10px;color:var(--mid);
+padding:1px 0}
+.wire li .tag{font-size:10.5px;letter-spacing:0.09em;text-transform:uppercase;color:var(--mid);
+padding-top:2px}
+.wire li code{font-family:var(--mono);font-size:12.5px;line-height:1.55;font-weight:400;
+white-space:pre;display:block}
+.wire li.now{color:var(--ink)}
+.wire li.now .tag{color:var(--soft)}
+.wire li.now code{font-weight:600}
+.wire .head{font-size:12px;color:var(--soft);margin:0 0 8px}
+.inst{font-size:15px;line-height:1.45}
+.inst .title{font-size:20px;font-weight:300;margin:0 0 14px}
+.kv{display:grid;grid-template-columns:minmax(0,10em) minmax(0,1fr);gap:3px 16px;margin:14px 0 0}
+.kv dt{color:var(--soft)}
+.kv dd{margin:0;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.chg{outline:2px solid var(--ink);outline-offset:2px}
+.kv dd.chg{justify-self:start}
+svg{display:block;max-width:100%;height:auto}
+.box3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.box3 > div{border:1px solid var(--light);height:76px;position:relative;padding:6px 8px;
+font-size:12px;color:var(--soft)}
+.box3 > div.here{border-color:var(--ink)}
+.box3 > div.chg{outline:2px solid var(--ink);outline-offset:-1px}
+.box3 .plate{position:absolute;left:12%;right:12%;bottom:12px;height:12px;background:var(--ink)}
+.bar{height:10px;background:var(--wash);border:1px solid var(--light);max-width:260px}
+.bar > i{display:block;height:100%;background:var(--ink)}
+table.t{border-collapse:collapse;width:100%;font-size:14px}
+table.t th{font-weight:400;font-size:11px;letter-spacing:0.09em;text-transform:uppercase;
+color:var(--soft);text-align:left;padding:0 12px 6px 0}
+table.t td{padding:4px 12px 4px 0;border-top:1px solid var(--hair);
+font-variant-numeric:tabular-nums;white-space:nowrap}
+table.t td.mono{font-family:var(--mono);font-size:12.5px}
+table.t tr.chg td{font-weight:500}
+table.t tr.chg{outline:2px solid var(--ink);outline-offset:-2px}
+.tablebox{overflow-x:auto}
+.none{color:var(--soft)}
+
+/* Outcome line. The muted red is for a hold or an error, nothing else. */
+.outcome{margin-top:28px;border-top:1px solid var(--hair);padding-top:16px;min-height:2em}
+.outcome .word{font-size:24px;font-weight:300;color:var(--ink);margin-right:14px}
+.outcome .word.bad{color:var(--alert)}
+.outcome .ev{font-size:15px;color:var(--ink)}
+
+/* All 9 list. */
+ol.all{list-style:none;margin:0 0 24px;padding:0;border-top:1px solid var(--hair)}
+ol.all li{display:grid;grid-template-columns:2em minmax(0,1fr) 8em;gap:10px;padding:7px 0;
+border-bottom:1px solid var(--hair);font-size:15px}
+ol.all li .n{color:var(--soft);font-variant-numeric:tabular-nums}
+ol.all li .st{color:var(--soft);text-align:right}
+ol.all li.on{font-weight:400}
+ol.all li.on .st{color:var(--ink)}
+ol.all li .st.bad{color:var(--alert)}
+
+@media (max-width:760px){body{font-size:16px}
+.stage{grid-template-columns:minmax(0,1fr);gap:30px}
+.wire{max-height:320px}
+.kv{grid-template-columns:minmax(0,8em) minmax(0,1fr)}
+ol.all li{grid-template-columns:1.6em minmax(0,1fr) 6.5em}}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important;
+scroll-behavior:auto !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<p class="eyebrow">Lab World <span>/</span> instrument integration <span>/</span> Di Hu</p>
+<h1>The hall, running in simulation</h1>
+<p class="small">Each run is a recording of a simulation. Where a driver exists, the frames shown
+are the ones it wrote. Nothing here ran on a physical instrument.</p>
+<p class="small"><a href="index.html">How each station is reached</a></p>
+</header>
+
+<div class="pick">
+<h2 id="r-stations-label">Station</h2>
+<ul class="row" id="r-stations" aria-labelledby="r-stations-label"></ul>
+<p class="about" id="r-about"></p>
+</div>
+<div class="pick">
+<h2 id="r-cases-label">Run</h2>
+<ul class="row" id="r-cases" aria-labelledby="r-cases-label"></ul>
+</div>
+
+<div class="controls" role="group" aria-label="Playback">
+<button class="c" type="button" id="r-run" aria-pressed="false">Run</button>
+<button class="c" type="button" id="r-step">Step</button>
+<button class="c" type="button" id="r-reset">Reset</button>
+<span class="gap"></span>
+<span id="r-speeds" role="group" aria-label="Speed" class="controls" style="margin:0"></span>
+<span class="pos" id="r-pos" aria-live="polite"></span>
+</div>
+<p class="small" style="margin-top:10px">Space runs or pauses. The right arrow steps.</p>
+
+<div class="stage">
+<div>
+<h2>On the wire</h2>
+<ol class="all" id="r-all" hidden></ol>
+<div class="wire" id="r-wire"></div>
+</div>
+<div>
+<h2>The simulated instrument</h2>
+<div class="inst" id="r-inst"></div>
+</div>
+</div>
+<div class="outcome" id="r-outcome" aria-live="polite"></div>
+</div>
+<script type="application/json" id="r-data">{"fixtures":false,"stations":[{"key":"culture","name":"Tissue-culture station","status":"open_choice","status_words":"Instrument not chosen yet","status_line":"Supplier and interface are still open, so there is no protocol to show yet."},{"key":"seed","name":"Agilent BioTek EL406","status":"in_plr","status_words":"Decoded, in PyLabRobot","status_line":"In PyLabRobot, v1 class EL406, registry status mostly (docs/_static/devices.json:120-122). Binary frames over FTDI USB."},{"key":"star","name":"Hamilton Microlab STAR","status":"in_plr","status_words":"Decoded, in PyLabRobot","status_line":"In PyLabRobot. The real STARDriver sends text firmware commands over USB."},{"key":"inc","name":"LiCONiC STX44 incubator","status":"in_plr_legacy","status_words":"Decoded, in PyLabRobot, older interface","status_line":"In PyLabRobot legacy only (v0); STX44_IC is a listed model (pylabrobot/legacy/storage/liconic/constants.py:5). ASCII over RS-232."},{"key":"rail","name":"Rail-mounted transfer arm (linear track)","status":"vendor_sdk","status_words":"Maker's SDK, nothing to decode","status_line":"Not in PyLabRobot yet, the maker's SDK documents it. The example writes the class."},{"key":"xarm","name":"UFACTORY xArm 6 plate arm","status":"vendor_sdk","status_words":"Maker's SDK, nothing to decode","status_line":"In PyLabRobot (XArm6). It wraps the maker's published Python SDK, so there is no wire to decode."},{"key":"hotel","name":"Passive plate hotel","status":"nothing_to_decode","status_words":"Nothing to decode","status_line":"No controller, so nothing to decode. In PyLabRobot it is a resource: plate holders on a carrier."},{"key":"reader","name":"BMG LABTECH PHERAstar FSX","status":"not_in_plr","status_words":"Not decoded yet","status_line":"Not in PyLabRobot. Upstream drives 2 other BMG readers; this one's commands are unknown."},{"key":"lcms","name":"Shared LC-MS bench","status":"nothing_to_decode","status_words":"Nothing to decode","status_line":"Not in PyLabRobot. The toolkit playbook's route, a Ready line and a Start line, needs no decoding."}],"traces":{"culture":{"clean":{"case":"clean","evidence":"CB-0001 released, worklist WL-7 matches","name":"Tissue-culture station","outcome":"completed","simulated":true,"station":"culture","steps":[{"i":0,"state":{"executed":0,"known_batches":["CB-0001"],"released":{}},"tag":"ask","text":"release CB-0001 for seeding against worklist WL-7"},{"i":1,"state":null,"tag":"send","text":"{\"op\": \"release\", \"batch\": \"CB-0001\", \"worklist\": \"WL-7\"}"},{"i":2,"state":{"executed":1,"known_batches":["CB-0001"],"released":{"CB-0001":"WL-7"}},"tag":"recv","text":"{\"ok\": true, \"batch\": \"CB-0001\"}"},{"i":3,"state":null,"tag":"state","text":"released {'CB-0001': 'WL-7'}, executed 1"},{"i":4,"state":null,"tag":"done","text":"completed: CB-0001 released, worklist WL-7 matches"}]},"lost_reply":{"case":"lost_reply","evidence":"release of CB-0001 sent, no acknowledgement","name":"Tissue-culture station","outcome":"hold","simulated":true,"station":"culture","steps":[{"i":0,"state":{"executed":0,"known_batches":["CB-0001"],"released":{}},"tag":"ask","text":"release CB-0001 for seeding against worklist WL-7"},{"i":1,"state":null,"tag":"send","text":"{\"op\": \"release\", \"batch\": \"CB-0001\", \"worklist\": \"WL-7\"}"},{"i":2,"state":{"executed":1,"known_batches":["CB-0001"],"released":{"CB-0001":"WL-7"}},"tag":"state","text":"released {'CB-0001': 'WL-7'}, executed 1"},{"i":3,"state":null,"tag":"done","text":"hold: release of CB-0001 sent, no acknowledgement"}]},"device_error":{"case":"device_error","evidence":"unknown_batch CB-0001","name":"Tissue-culture station","outcome":"error","simulated":true,"station":"culture","steps":[{"i":0,"state":{"executed":0,"known_batches":["CB-0001"],"released":{}},"tag":"ask","text":"release CB-0001 for seeding against worklist WL-7"},{"i":1,"state":null,"tag":"send","text":"{\"op\": \"release\", \"batch\": \"CB-0001\", \"worklist\": \"WL-7\"}"},{"i":2,"state":null,"tag":"recv","text":"{\"ok\": false, \"error\": \"unknown_batch\", \"batch\": \"CB-0001\"}"},{"i":3,"state":null,"tag":"state","text":"released {}, executed 0"},{"i":4,"state":null,"tag":"done","text":"error: unknown_batch CB-0001"}]}},"seed":{"clean":{"case":"clean","evidence":"sim: 24/24 columns at 40 uL/well, peristaltic pump, plate byte 1 (384 std)","name":"Agilent BioTek EL406","outcome":"completed","simulated":true,"station":"seed","steps":[{"i":0,"state":{"batch_open":false,"columns_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"error":"","plate":null,"prime_uL":0.0,"pump":null},"tag":"ask","text":"set up: FTDI 38400 8N2, TEST_COMM, INIT_STATE, RESET"},{"i":1,"state":null,"tag":"send","text":"3 frames, by command: TEST_COMM INIT_STATE RESET"},{"i":2,"state":null,"tag":"recv","text":"3 replies, last: 06 01 02 70 00 01 00 00 00 00 8c ff"},{"i":3,"state":null,"tag":"state","text":"plate -, batch closed, prime 0 uL, 0 cols at [] uL, err 0x0000"},{"i":4,"state":null,"tag":"ask","text":"open a batch for the 384-well plate"},{"i":5,"state":{"batch_open":true,"columns_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"error":"","plate":"384 std","prime_uL":0.0,"pump":null},"tag":"send","text":"7 frames, by command: 0x00bf 0x00c1 0x00f2 0x00f4 0x0154 0x0102 0x010a"},{"i":6,"state":null,"tag":"send","text":"01 02 8d 00 01 00 00 01 00 6d ff 01"},{"i":7,"state":null,"tag":"recv","text":"8 replies, last: 06 01 02 8d 00 01 00 00 00 00 6f ff"},{"i":8,"state":null,"tag":"state","text":"plate 384 std, batch open, prime 0 uL, 0 cols at [] uL, err 0x0000"},{"i":9,"state":null,"tag":"ask","text":"prime the peristaltic lines, 500 uL"},{"i":10,"state":{"batch_open":true,"columns_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"error":"","plate":"384 std","prime_uL":500.0,"pump":"peristaltic"},"tag":"send","text":"1 frames, by command: STATUS_POLL"},{"i":11,"state":null,"tag":"send","text":"01 02 90 00 01 00 00 0b 00 67 fe 01 f4 01 00 00 02 01 00 01 00 00"},{"i":12,"state":null,"tag":"send","text":"2 frames, by command: STATUS_POLL STATUS_POLL"},{"i":13,"state":null,"tag":"recv","text":"4 replies, last: 06 01 02 92 00 01 00 00 09 00 60 ff 00 00 01 00 00 00 00 00 00"},{"i":14,"state":null,"tag":"state","text":"plate 384 std, batch open, prime 500 uL, 0 cols at [] uL, err 0x0000"},{"i":15,"state":null,"tag":"ask","text":"dispense 40 uL per well, columns 1-24"},{"i":16,"state":{"batch_open":true,"columns_uL":[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0],"error":"","plate":"384 std","prime_uL":500.0,"pump":"peristaltic"},"tag":"send","text":"1 frames, by command: STATUS_POLL"},{"i":17,"state":null,"tag":"send","text":"01 02 8f 00 01 00 00 18 00 d2 fb 01 28 00 02 00 00 00 4d 01 0a 00 02 ff ff ff 00 00..."},{"i":18,"state":null,"tag":"send","text":"2 frames, by command: STATUS_POLL STATUS_POLL"},{"i":19,"state":null,"tag":"recv","text":"4 replies, last: 06 01 02 92 00 01 00 00 09 00 60 ff 00 00 01 00 00 00 00 00 00"},{"i":20,"state":null,"tag":"state","text":"plate 384 std, batch open, prime 500 uL, 24 cols at [40] uL, err 0x0000"},{"i":21,"state":null,"tag":"ask","text":"close the batch: home motors, end-of-batch marker"},{"i":22,"state":{"batch_open":false,"columns_uL":[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0],"error":"","plate":"384 std","prime_uL":500.0,"pump":"peristaltic"},"tag":"send","text":"2 frames, by command: HOME_MOTORS END_OF_BATCH"},{"i":23,"state":null,"tag":"recv","text":"2 replies, last: 06 01 02 8c 00 01 00 00 00 00 70 ff"},{"i":24,"state":null,"tag":"state","text":"plate 384 std, batch closed, prime 500 uL, 24 cols at [40] uL, err 0x0000"},{"i":25,"state":null,"tag":"done","text":"completed: sim: 24/24 columns at 40 uL/well, peristaltic pump, plate byte 1 (384 std)"}]},"lost_reply":{"case":"lost_reply","evidence":"PERI_DISPENSE: Timeout waiting for ACK; not resent (sim ran it 1x), check plate","name":"Agilent BioTek EL406","outcome":"hold","simulated":true,"station":"seed","steps":[{"i":0,"state":{"batch_open":false,"columns_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"error":"","plate":null,"prime_uL":0.0,"pump":null},"tag":"ask","text":"set up: FTDI 38400 8N2, TEST_COMM, INIT_STATE, RESET"},{"i":1,"state":null,"tag":"send","text":"3 frames, by command: TEST_COMM INIT_STATE RESET"},{"i":2,"state":null,"tag":"recv","text":"3 replies, last: 06 01 02 70 00 01 00 00 00 00 8c ff"},{"i":3,"state":null,"tag":"state","text":"plate -, batch closed, prime 0 uL, 0 cols at [] uL, err 0x0000"},{"i":4,"state":null,"tag":"ask","text":"open a batch for the 384-well plate"},{"i":5,"state":{"batch_open":true,"columns_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"error":"","plate":"384 std","prime_uL":0.0,"pump":null},"tag":"send","text":"7 frames, by command: 0x00bf 0x00c1 0x00f2 0x00f4 0x0154 0x0102 0x010a"},{"i":6,"state":null,"tag":"send","text":"01 02 8d 00 01 00 00 01 00 6d ff 01"},{"i":7,"state":null,"tag":"recv","text":"8 replies, last: 06 01 02 8d 00 01 00 00 00 00 6f ff"},{"i":8,"state":null,"tag":"state","text":"plate 384 std, batch open, prime 0 uL, 0 cols at [] uL, err 0x0000"},{"i":9,"state":null,"tag":"ask","text":"prime the peristaltic lines, 500 uL"},{"i":10,"state":{"batch_open":true,"columns_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"error":"","plate":"384 std","prime_uL":500.0,"pump":"peristaltic"},"tag":"send","text":"1 frames, by command: STATUS_POLL"},{"i":11,"state":null,"tag":"send","text":"01 02 90 00 01 00 00 0b 00 67 fe 01 f4 01 00 00 02 01 00 01 00 00"},{"i":12,"state":null,"tag":"send","text":"2 frames, by command: STATUS_POLL STATUS_POLL"},{"i":13,"state":null,"tag":"recv","text":"4 replies, last: 06 01 02 92 00 01 00 00 09 00 60 ff 00 00 01 00 00 00 00 00 00"},{"i":14,"state":null,"tag":"state","text":"plate 384 std, batch open, prime 500 uL, 0 cols at [] uL, err 0x0000"},{"i":15,"state":null,"tag":"ask","text":"dispense 40 uL per well, columns 1-24"},{"i":16,"state":{"batch_open":false,"columns_uL":[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0],"error":"","plate":"384 std","prime_uL":500.0,"pump":"peristaltic"},"tag":"send","text":"1 frames, by command: STATUS_POLL"},{"i":17,"state":null,"tag":"send","text":"01 02 8f 00 01 00 00 18 00 d2 fb 01 28 00 02 00 00 00 4d 01 0a 00 02 ff ff ff 00 00..."},{"i":18,"state":null,"tag":"send","text":"2 frames, by command: HOME_MOTORS END_OF_BATCH"},{"i":19,"state":null,"tag":"recv","text":"3 replies, last: 06 01 02 8c 00 01 00 00 00 00 70 ff"},{"i":20,"state":null,"tag":"state","text":"plate 384 std, batch closed, prime 500 uL, 24 cols at [40] uL, err 0x0000"},{"i":21,"state":null,"tag":"done","text":"hold: PERI_DISPENSE: Timeout waiting for ACK; not resent (sim ran it 1x), check plate"}]},"device_error":{"case":"device_error","evidence":"EL406 error 0x1355: The Peri-pump module is not configured","name":"Agilent BioTek EL406","outcome":"error","simulated":true,"station":"seed","steps":[{"i":0,"state":{"batch_open":false,"columns_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"error":"","plate":null,"prime_uL":0.0,"pump":null},"tag":"ask","text":"set up: FTDI 38400 8N2, TEST_COMM, INIT_STATE, RESET"},{"i":1,"state":null,"tag":"send","text":"3 frames, by command: TEST_COMM INIT_STATE RESET"},{"i":2,"state":null,"tag":"recv","text":"3 replies, last: 06 01 02 70 00 01 00 00 00 00 8c ff"},{"i":3,"state":null,"tag":"state","text":"plate -, batch closed, prime 0 uL, 0 cols at [] uL, err 0x0000"},{"i":4,"state":null,"tag":"ask","text":"open a batch for the 384-well plate"},{"i":5,"state":{"batch_open":true,"columns_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"error":"","plate":"384 std","prime_uL":0.0,"pump":null},"tag":"send","text":"7 frames, by command: 0x00bf 0x00c1 0x00f2 0x00f4 0x0154 0x0102 0x010a"},{"i":6,"state":null,"tag":"send","text":"01 02 8d 00 01 00 00 01 00 6d ff 01"},{"i":7,"state":null,"tag":"recv","text":"8 replies, last: 06 01 02 8d 00 01 00 00 00 00 6f ff"},{"i":8,"state":null,"tag":"state","text":"plate 384 std, batch open, prime 0 uL, 0 cols at [] uL, err 0x0000"},{"i":9,"state":null,"tag":"ask","text":"prime the peristaltic lines, 500 uL"},{"i":10,"state":{"batch_open":true,"columns_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"error":"","plate":"384 std","prime_uL":500.0,"pump":"peristaltic"},"tag":"send","text":"1 frames, by command: STATUS_POLL"},{"i":11,"state":null,"tag":"send","text":"01 02 90 00 01 00 00 0b 00 67 fe 01 f4 01 00 00 02 01 00 01 00 00"},{"i":12,"state":null,"tag":"send","text":"2 frames, by command: STATUS_POLL STATUS_POLL"},{"i":13,"state":null,"tag":"recv","text":"4 replies, last: 06 01 02 92 00 01 00 00 09 00 60 ff 00 00 01 00 00 00 00 00 00"},{"i":14,"state":null,"tag":"state","text":"plate 384 std, batch open, prime 500 uL, 0 cols at [] uL, err 0x0000"},{"i":15,"state":null,"tag":"ask","text":"dispense 40 uL per well, columns 1-24"},{"i":16,"state":{"batch_open":false,"columns_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"error":"0x1355 The Peri-pump module is not configured","plate":"384 std","prime_uL":500.0,"pump":"peristaltic"},"tag":"send","text":"1 frames, by command: STATUS_POLL"},{"i":17,"state":null,"tag":"send","text":"01 02 8f 00 01 00 00 18 00 d2 fb 01 28 00 02 00 00 00 4d 01 0a 00 02 ff ff ff 00 00..."},{"i":18,"state":null,"tag":"send","text":"4 frames, by command: STATUS_POLL STATUS_POLL HOME_MOTORS END_OF_BATCH"},{"i":19,"state":null,"tag":"recv","text":"6 replies, last: 06 01 02 8c 00 01 00 00 00 00 70 ff"},{"i":20,"state":null,"tag":"state","text":"plate 384 std, batch closed, prime 500 uL, 0 cols at [] uL, err 0x1355"},{"i":21,"state":null,"tag":"done","text":"error: EL406 error 0x1355: The Peri-pump module is not configured"}]}},"star":{"clean":{"case":"clean","evidence":"destination col 1: [55.1] uL each (50 uL asked + liquid class); 96 tips in rack","name":"Hamilton Microlab STAR","outcome":"completed","simulated":true,"station":"star","steps":[{"i":0,"state":{"dest_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"initialized":false,"source_uL":[100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0],"tip_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"tips_in_rack":96,"tips_on_channel":[false,false,false,false,false,false,false,false]},"tag":"ask","text":"set up; 8 tips; 50 uL from source col 1 to destination col 1; return tips"},{"i":1,"state":null,"tag":"send","text":"C0RMid0001"},{"i":2,"state":null,"tag":"recv","text":"C0RMid0001er00/00kb01kp08"},{"i":3,"state":null,"tag":"send","text":"C0VIid0034"},{"i":4,"state":{"dest_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"initialized":true,"source_uL":[100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0],"tip_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"tips_in_rack":96,"tips_on_channel":[false,false,false,false,false,false,false,false]},"tag":"recv","text":"C0VIid0034er00/00"},{"i":5,"state":null,"tag":"send","text":"C0DIid0036xp08000&yp4050 3783 3516 3249 2982 2715 2448 2181tp2450tz1220te3600tm1 1 1 1 1 1 ..."},{"i":6,"state":null,"tag":"recv","text":"C0DIid0036er00/00"},{"i":7,"state":null,"tag":"send","text":"C0TPid0117xp01179 01179 01179 01179 01179 01179 01179 01179yp1458 1368 1278 1188 1098 1008 ..."},{"i":8,"state":{"dest_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"initialized":true,"source_uL":[100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0],"tip_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"tips_in_rack":88,"tips_on_channel":[true,true,true,true,true,true,true,true]},"tag":"state","text":"tips on 8 of 8 channels"},{"i":9,"state":null,"tag":"recv","text":"C0TPid0117er00/00"},{"i":10,"state":null,"tag":"send","text":"C0ASid0176at0 0 0 0 0 0 0 0tm1 1 1 1 1 1 1 1xp02758 02758 02758 02758 02758 02758 02758 027..."},{"i":11,"state":{"dest_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"initialized":true,"source_uL":[44.9,44.9,44.9,44.9,44.9,44.9,44.9,44.9],"tip_uL":[55.1,55.1,55.1,55.1,55.1,55.1,55.1,55.1],"tips_in_rack":88,"tips_on_channel":[true,true,true,true,true,true,true,true]},"tag":"state","text":"left in source wells: [44.9] uL each; tips hold [55.1] uL each"},{"i":12,"state":null,"tag":"recv","text":"C0ASid0176er00/00"},{"i":13,"state":null,"tag":"send","text":"C0DSid0227dm2 2 2 2 2 2 2 2tm1 1 1 1 1 1 1 1xp02758 02758 02758 02758 02758 02758 02758 027..."},{"i":14,"state":{"dest_uL":[55.1,55.1,55.1,55.1,55.1,55.1,55.1,55.1],"initialized":true,"source_uL":[44.9,44.9,44.9,44.9,44.9,44.9,44.9,44.9],"tip_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"tips_in_rack":88,"tips_on_channel":[true,true,true,true,true,true,true,true]},"tag":"state","text":"now in destination wells: [55.1] uL each; tips hold [0.0] uL each"},{"i":15,"state":null,"tag":"recv","text":"C0DSid0227er00/00"},{"i":16,"state":null,"tag":"send","text":"C0TRid0238xp01179 01179 01179 01179 01179 01179 01179 01179yp1458 1368 1278 1188 1098 1008 ..."},{"i":17,"state":{"dest_uL":[55.1,55.1,55.1,55.1,55.1,55.1,55.1,55.1],"initialized":true,"source_uL":[44.9,44.9,44.9,44.9,44.9,44.9,44.9,44.9],"tip_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"tips_in_rack":96,"tips_on_channel":[false,false,false,false,false,false,false,false]},"tag":"state","text":"tips on 0 of 8 channels, 96 in the rack"},{"i":18,"state":null,"tag":"recv","text":"C0TRid0238er00/00"},{"i":19,"state":null,"tag":"done","text":"completed: destination col 1: [55.1] uL each (50 uL asked + liquid class); 96 tips in rack"}]},"lost_reply":{"case":"lost_reply","evidence":"no reply to C0AS after 1 send; liquid may have moved, not resent; check by hand","name":"Hamilton Microlab STAR","outcome":"hold","simulated":true,"station":"star","steps":[{"i":0,"state":{"dest_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"initialized":false,"source_uL":[100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0],"tip_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"tips_in_rack":96,"tips_on_channel":[false,false,false,false,false,false,false,false]},"tag":"ask","text":"set up; 8 tips; 50 uL from source col 1 to destination col 1; return tips"},{"i":1,"state":null,"tag":"send","text":"C0RMid0001"},{"i":2,"state":null,"tag":"recv","text":"C0RMid0001er00/00kb01kp08"},{"i":3,"state":null,"tag":"send","text":"C0VIid0034"},{"i":4,"state":{"dest_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"initialized":true,"source_uL":[100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0],"tip_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"tips_in_rack":96,"tips_on_channel":[false,false,false,false,false,false,false,false]},"tag":"recv","text":"C0VIid0034er00/00"},{"i":5,"state":null,"tag":"send","text":"C0DIid0036xp08000&yp4050 3783 3516 3249 2982 2715 2448 2181tp2450tz1220te3600tm1 1 1 1 1 1 ..."},{"i":6,"state":null,"tag":"recv","text":"C0DIid0036er00/00"},{"i":7,"state":null,"tag":"send","text":"C0TPid0117xp01179 01179 01179 01179 01179 01179 01179 01179yp1458 1368 1278 1188 1098 1008 ..."},{"i":8,"state":{"dest_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"initialized":true,"source_uL":[100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0],"tip_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"tips_in_rack":88,"tips_on_channel":[true,true,true,true,true,true,true,true]},"tag":"state","text":"tips on 8 of 8 channels"},{"i":9,"state":null,"tag":"recv","text":"C0TPid0117er00/00"},{"i":10,"state":null,"tag":"send","text":"C0ASid0176at0 0 0 0 0 0 0 0tm1 1 1 1 1 1 1 1xp02758 02758 02758 02758 02758 02758 02758 027..."},{"i":11,"state":{"dest_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"initialized":true,"source_uL":[44.9,44.9,44.9,44.9,44.9,44.9,44.9,44.9],"tip_uL":[55.1,55.1,55.1,55.1,55.1,55.1,55.1,55.1],"tips_in_rack":88,"tips_on_channel":[true,true,true,true,true,true,true,true]},"tag":"state","text":"left in source wells: [44.9] uL each; tips hold [55.1] uL each"},{"i":12,"state":null,"tag":"recv","text":"(nothing: the reply was lost)"},{"i":13,"state":null,"tag":"done","text":"hold: no reply to C0AS after 1 send; liquid may have moved, not resent; check by hand"}]},"device_error":{"case":"device_error","evidence":"STARFirmwareError: C0ASid0176er99/00 P106/70","name":"Hamilton Microlab STAR","outcome":"error","simulated":true,"station":"star","steps":[{"i":0,"state":{"dest_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"initialized":false,"source_uL":[100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0],"tip_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"tips_in_rack":96,"tips_on_channel":[false,false,false,false,false,false,false,false]},"tag":"ask","text":"set up; 8 tips; 50 uL from source col 1 to destination col 1; return tips"},{"i":1,"state":null,"tag":"send","text":"C0RMid0001"},{"i":2,"state":null,"tag":"recv","text":"C0RMid0001er00/00kb01kp08"},{"i":3,"state":null,"tag":"send","text":"C0VIid0034"},{"i":4,"state":{"dest_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"initialized":true,"source_uL":[100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0],"tip_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"tips_in_rack":96,"tips_on_channel":[false,false,false,false,false,false,false,false]},"tag":"recv","text":"C0VIid0034er00/00"},{"i":5,"state":null,"tag":"send","text":"C0DIid0036xp08000&yp4050 3783 3516 3249 2982 2715 2448 2181tp2450tz1220te3600tm1 1 1 1 1 1 ..."},{"i":6,"state":null,"tag":"recv","text":"C0DIid0036er00/00"},{"i":7,"state":null,"tag":"send","text":"C0TPid0117xp01179 01179 01179 01179 01179 01179 01179 01179yp1458 1368 1278 1188 1098 1008 ..."},{"i":8,"state":{"dest_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"initialized":true,"source_uL":[100.0,100.0,100.0,100.0,100.0,100.0,100.0,100.0],"tip_uL":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"tips_in_rack":88,"tips_on_channel":[true,true,true,true,true,true,true,true]},"tag":"state","text":"tips on 8 of 8 channels"},{"i":9,"state":null,"tag":"recv","text":"C0TPid0117er00/00"},{"i":10,"state":null,"tag":"send","text":"C0ASid0176at0 0 0 0 0 0 0 0tm1 1 1 1 1 1 1 1xp02758 02758 02758 02758 02758 02758 02758 027..."},{"i":11,"state":null,"tag":"recv","text":"C0ASid0176er99/00 P106/70"},{"i":12,"state":null,"tag":"done","text":"error: STARFirmwareError: C0ASid0176er99/00 P106/70"}]}},"inc":{"clean":{"case":"clean","evidence":"sim: plate path shovel > cassette 1/1 > shovel > transfer; 37.0 deg C","name":"LiCONiC STX44 incubator","outcome":"completed","simulated":true,"station":"inc","steps":[{"i":0,"state":{"cassette":null,"error":"","plate_at":"transfer","position":null,"ready":true,"temp_c":37.0},"tag":"ask","text":"set up: break, CR handshake, activate handling, wait ready"},{"i":1,"state":null,"tag":"send","text":"CR | ST 1801 | RD 1915"},{"i":2,"state":null,"tag":"recv","text":"CC | OK | 1"},{"i":3,"state":null,"tag":"state","text":"plate at transfer, ready 1, error 00000, temp 37.0 deg C"},{"i":4,"state":null,"tag":"ask","text":"take the plate in from the transfer station to cassette 1, position 1"},{"i":5,"state":{"cassette":1,"error":"","plate_at":"cassette","position":1,"ready":true,"temp_c":37.0},"tag":"send","text":"WR DM0 1 | WR DM23 788 | WR DM25 22 | WR DM5 1 | ST 1904 | RD 1915 | ST 1903"},{"i":6,"state":null,"tag":"recv","text":"OK x5 | 1 | OK"},{"i":7,"state":null,"tag":"state","text":"plate at cassette 1/1, ready 1, error 00000, temp 37.0 deg C"},{"i":8,"state":null,"tag":"ask","text":"fetch the plate back out to the transfer station"},{"i":9,"state":{"cassette":null,"error":"","plate_at":"transfer","position":null,"ready":true,"temp_c":37.0},"tag":"send","text":"WR DM0 1 | WR DM23 788 | WR DM25 22 | WR DM5 1 | ST 1905 | RD 1915 | ST 1903"},{"i":10,"state":null,"tag":"recv","text":"OK x5 | 1 | OK"},{"i":11,"state":null,"tag":"state","text":"plate at transfer, ready 1, error 00000, temp 37.0 deg C"},{"i":12,"state":null,"tag":"ask","text":"read the temperature"},{"i":13,"state":null,"tag":"send","text":"RD DM982"},{"i":14,"state":null,"tag":"recv","text":"370"},{"i":15,"state":null,"tag":"state","text":"plate at transfer, ready 1, error 00000, temp 37.0 deg C"},{"i":16,"state":null,"tag":"state","text":"upstream warning: Liconic racks need to be configured manually on each setup"},{"i":17,"state":null,"tag":"done","text":"completed: sim: plate path shovel > cassette 1/1 > shovel > transfer; 37.0 deg C"}]},"lost_reply":{"case":"lost_reply","evidence":"no reply to ST 1904, not resent (sim ran it 1x); sim: cassette 1/1, PLR: tray","name":"LiCONiC STX44 incubator","outcome":"hold","simulated":true,"station":"inc","steps":[{"i":0,"state":{"cassette":null,"error":"","plate_at":"transfer","position":null,"ready":true,"temp_c":37.0},"tag":"ask","text":"set up: break, CR handshake, activate handling, wait ready"},{"i":1,"state":null,"tag":"send","text":"CR | ST 1801 | RD 1915"},{"i":2,"state":null,"tag":"recv","text":"CC | OK | 1"},{"i":3,"state":null,"tag":"state","text":"plate at transfer, ready 1, error 00000, temp 37.0 deg C"},{"i":4,"state":null,"tag":"ask","text":"take the plate in from the transfer station to cassette 1, position 1"},{"i":5,"state":{"cassette":1,"error":"","plate_at":"cassette","position":1,"ready":true,"temp_c":37.0},"tag":"send","text":"WR DM0 1 | WR DM23 788 | WR DM25 22 | WR DM5 1 | ST 1904"},{"i":6,"state":null,"tag":"recv","text":"OK x4"},{"i":7,"state":null,"tag":"state","text":"plate at cassette 1/1, ready 1, error 00000, temp 37.0 deg C"},{"i":8,"state":null,"tag":"state","text":"upstream warning: Liconic racks need to be configured manually on each setup"},{"i":9,"state":null,"tag":"done","text":"hold: no reply to ST 1904, not resent (sim ran it 1x); sim: cassette 1/1, PLR: tray"}]},"device_error":{"case":"device_error","evidence":"DM200=00103 LiconicHandlerImportPlateError: Lift did not reach upper pick position at transfer level during Import Plate procedure.","name":"LiCONiC STX44 incubator","outcome":"error","simulated":true,"station":"inc","steps":[{"i":0,"state":{"cassette":null,"error":"","plate_at":"transfer","position":null,"ready":true,"temp_c":37.0},"tag":"ask","text":"set up: break, CR handshake, activate handling, wait ready"},{"i":1,"state":null,"tag":"send","text":"CR | ST 1801 | RD 1915"},{"i":2,"state":null,"tag":"recv","text":"CC | OK | 1"},{"i":3,"state":null,"tag":"state","text":"plate at transfer, ready 1, error 00000, temp 37.0 deg C"},{"i":4,"state":null,"tag":"ask","text":"take the plate in from the transfer station to cassette 1, position 1"},{"i":5,"state":{"cassette":null,"error":"00103","plate_at":"shovel","position":null,"ready":false,"temp_c":37.0},"tag":"send","text":"WR DM0 1 | WR DM23 788 | WR DM25 22 | WR DM5 1 | ST 1904 | RD 1915 x600 | RD 1814 | RD DM200"},{"i":6,"state":null,"tag":"recv","text":"OK x5 | 0 x600 | 1 | 00103"},{"i":7,"state":null,"tag":"state","text":"plate at shovel, ready 0, error 00103, temp 37.0 deg C"},{"i":8,"state":null,"tag":"state","text":"upstream warning: Liconic racks need to be configured manually on each setup"},{"i":9,"state":null,"tag":"done","text":"error: DM200=00103 LiconicHandlerImportPlateError: Lift did not reach upper pick position at t"}]}},"rail":{"clean":{"case":"clean","evidence":"position report 450 mm == taught 450 mm, error register 0","name":"Rail-mounted transfer arm (linear track)","outcome":"completed","simulated":true,"station":"rail","steps":[{"i":0,"state":{"enabled":false,"error":0,"homed":false,"moves":0,"pos_mm":0.0,"target_mm":null,"travel_mm":700.0},"tag":"ask","text":"setup, home, move to 450 mm at 200 mm/s, stop"},{"i":1,"state":null,"tag":"send","text":"get_linear_motor_is_enabled()"},{"i":2,"state":null,"tag":"recv","text":"(0, 0)"},{"i":3,"state":null,"tag":"send","text":"set_linear_motor_enable(True)"},{"i":4,"state":{"enabled":true,"error":0,"homed":false,"moves":0,"pos_mm":0.0,"target_mm":null,"travel_mm":700.0},"tag":"recv","text":"0"},{"i":5,"state":null,"tag":"send","text":"get_linear_motor_on_zero()"},{"i":6,"state":null,"tag":"recv","text":"(0, 0)"},{"i":7,"state":null,"tag":"send","text":"set_linear_motor_back_origin(wait=False,auto_enable=True)"},{"i":8,"state":{"enabled":true,"error":0,"homed":true,"moves":0,"pos_mm":0.0,"target_mm":null,"travel_mm":700.0},"tag":"recv","text":"0"},{"i":9,"state":null,"tag":"send","text":"get_linear_motor_on_zero()"},{"i":10,"state":null,"tag":"recv","text":"(0, 1)"},{"i":11,"state":null,"tag":"send","text":"get_linear_motor_pos()"},{"i":12,"state":null,"tag":"recv","text":"(0, 0)"},{"i":13,"state":null,"tag":"send","text":"set_linear_motor_pos(450,speed=200,wait=False)"},{"i":14,"state":{"enabled":true,"error":0,"homed":true,"moves":1,"pos_mm":450.0,"target_mm":450.0,"travel_mm":700.0},"tag":"recv","text":"0"},{"i":15,"state":null,"tag":"send","text":"get_linear_motor_error()"},{"i":16,"state":null,"tag":"recv","text":"(0, 0)"},{"i":17,"state":null,"tag":"send","text":"get_linear_motor_status()"},{"i":18,"state":null,"tag":"recv","text":"(0, 0)"},{"i":19,"state":null,"tag":"send","text":"get_linear_motor_pos()"},{"i":20,"state":null,"tag":"recv","text":"(0, 450)"},{"i":21,"state":null,"tag":"send","text":"set_linear_motor_enable(False)"},{"i":22,"state":{"enabled":false,"error":0,"homed":true,"moves":1,"pos_mm":450.0,"target_mm":450.0,"travel_mm":700.0},"tag":"recv","text":"0"},{"i":23,"state":null,"tag":"state","text":"pos 450 mm, enabled 0, on_zero 1, error 0, moves 1"},{"i":24,"state":null,"tag":"done","text":"completed: position report 450 mm == taught 450 mm, error register 0"}]},"lost_reply":{"case":"lost_reply","evidence":"get_linear_motor_pos: no reply within 0.2 s; move sent 1 time, not confirmed","name":"Rail-mounted transfer arm (linear track)","outcome":"hold","simulated":true,"station":"rail","steps":[{"i":0,"state":{"enabled":false,"error":0,"homed":false,"moves":0,"pos_mm":0.0,"target_mm":null,"travel_mm":700.0},"tag":"ask","text":"setup, home, move to 450 mm at 200 mm/s, stop"},{"i":1,"state":null,"tag":"send","text":"get_linear_motor_is_enabled()"},{"i":2,"state":null,"tag":"recv","text":"(0, 0)"},{"i":3,"state":null,"tag":"send","text":"set_linear_motor_enable(True)"},{"i":4,"state":{"enabled":true,"error":0,"homed":false,"moves":0,"pos_mm":0.0,"target_mm":null,"travel_mm":700.0},"tag":"recv","text":"0"},{"i":5,"state":null,"tag":"send","text":"get_linear_motor_on_zero()"},{"i":6,"state":null,"tag":"recv","text":"(0, 0)"},{"i":7,"state":null,"tag":"send","text":"set_linear_motor_back_origin(wait=False,auto_enable=True)"},{"i":8,"state":{"enabled":true,"error":0,"homed":true,"moves":0,"pos_mm":0.0,"target_mm":null,"travel_mm":700.0},"tag":"recv","text":"0"},{"i":9,"state":null,"tag":"send","text":"get_linear_motor_on_zero()"},{"i":10,"state":null,"tag":"recv","text":"(0, 1)"},{"i":11,"state":null,"tag":"send","text":"get_linear_motor_pos()"},{"i":12,"state":null,"tag":"recv","text":"(0, 0)"},{"i":13,"state":null,"tag":"send","text":"set_linear_motor_pos(450,speed=200,wait=False)"},{"i":14,"state":{"enabled":true,"error":0,"homed":true,"moves":1,"pos_mm":450.0,"target_mm":450.0,"travel_mm":700.0},"tag":"recv","text":"0"},{"i":15,"state":null,"tag":"send","text":"get_linear_motor_error()"},{"i":16,"state":null,"tag":"recv","text":"(0, 0)"},{"i":17,"state":null,"tag":"send","text":"get_linear_motor_status()"},{"i":18,"state":null,"tag":"recv","text":"(0, 0)"},{"i":19,"state":null,"tag":"send","text":"get_linear_motor_pos()"},{"i":20,"state":null,"tag":"state","text":"pos 450 mm, enabled 1, on_zero 1, error 0, moves 1"},{"i":21,"state":null,"tag":"done","text":"hold: get_linear_motor_pos: no reply within 0.2 s; move sent 1 time, not confirmed"}]},"device_error":{"case":"device_error","evidence":"LinearTrackError 13: Linear Motor Large Motor Position Deviation (error register)","name":"Rail-mounted transfer arm (linear track)","outcome":"error","simulated":true,"station":"rail","steps":[{"i":0,"state":{"enabled":false,"error":0,"homed":false,"moves":0,"pos_mm":0.0,"target_mm":null,"travel_mm":700.0},"tag":"ask","text":"setup, home, move to 450 mm at 200 mm/s, stop"},{"i":1,"state":null,"tag":"send","text":"get_linear_motor_is_enabled()"},{"i":2,"state":null,"tag":"recv","text":"(0, 0)"},{"i":3,"state":null,"tag":"send","text":"set_linear_motor_enable(True)"},{"i":4,"state":{"enabled":true,"error":0,"homed":false,"moves":0,"pos_mm":0.0,"target_mm":null,"travel_mm":700.0},"tag":"recv","text":"0"},{"i":5,"state":null,"tag":"send","text":"get_linear_motor_on_zero()"},{"i":6,"state":null,"tag":"recv","text":"(0, 0)"},{"i":7,"state":null,"tag":"send","text":"set_linear_motor_back_origin(wait=False,auto_enable=True)"},{"i":8,"state":{"enabled":true,"error":0,"homed":true,"moves":0,"pos_mm":0.0,"target_mm":null,"travel_mm":700.0},"tag":"recv","text":"0"},{"i":9,"state":null,"tag":"send","text":"get_linear_motor_on_zero()"},{"i":10,"state":null,"tag":"recv","text":"(0, 1)"},{"i":11,"state":null,"tag":"send","text":"get_linear_motor_pos()"},{"i":12,"state":null,"tag":"recv","text":"(0, 0)"},{"i":13,"state":null,"tag":"send","text":"set_linear_motor_pos(450,speed=200,wait=False)"},{"i":14,"state":{"enabled":true,"error":13,"homed":true,"moves":1,"pos_mm":225.0,"target_mm":450.0,"travel_mm":700.0},"tag":"recv","text":"0"},{"i":15,"state":null,"tag":"send","text":"get_linear_motor_error()"},{"i":16,"state":null,"tag":"recv","text":"(0, 13)"},{"i":17,"state":null,"tag":"state","text":"pos 225 mm, enabled 1, on_zero 1, error 13, moves 1"},{"i":18,"state":null,"tag":"done","text":"error: LinearTrackError 13: Linear Motor Large Motor Position Deviation (error register)"}]}},"xarm":{"clean":{"case":"clean","evidence":"plate at reader nest, jaws at 850 of 850 units, error_code 0","name":"UFACTORY xArm 6 plate arm","outcome":"completed","simulated":true,"station":"xarm","steps":[{"i":0,"state":{"error_code":0,"jaw_max":850,"jaw_units":850,"plate_at":"hotel","pose":[300.0,0.0,300.0]},"tag":"ask","text":"setup()"},{"i":1,"state":null,"tag":"state","text":"setup made 9 SDK calls, all returned 0; mode 0, state 0, gripper enabled True"},{"i":2,"state":null,"tag":"ask","text":"carry 1 plate: hotel nest -> reader nest"},{"i":3,"state":null,"tag":"send","text":"set_position(x=300,y=200,z=180,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":4,"state":{"error_code":0,"jaw_max":850,"jaw_units":850,"plate_at":"hotel","pose":[300.0,200.0,180.0]},"tag":"recv","text":"0"},{"i":5,"state":null,"tag":"send","text":"set_gripper_position(850,wait=True,speed=0)"},{"i":6,"state":null,"tag":"recv","text":"0"},{"i":7,"state":null,"tag":"send","text":"set_position(x=300,y=200,z=100,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":8,"state":{"error_code":0,"jaw_max":850,"jaw_units":850,"plate_at":"hotel","pose":[300.0,200.0,100.0]},"tag":"recv","text":"0"},{"i":9,"state":null,"tag":"send","text":"set_gripper_position(97,wait=True,speed=0)"},{"i":10,"state":{"error_code":0,"jaw_max":850,"jaw_units":156,"plate_at":"gripper","pose":[300.0,200.0,100.0]},"tag":"recv","text":"0"},{"i":11,"state":null,"tag":"send","text":"set_position(x=300,y=200,z=180,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":12,"state":{"error_code":0,"jaw_max":850,"jaw_units":156,"plate_at":"gripper","pose":[300.0,200.0,180.0]},"tag":"recv","text":"0"},{"i":13,"state":null,"tag":"send","text":"set_position(x=300,y=-200,z=130,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":14,"state":{"error_code":0,"jaw_max":850,"jaw_units":156,"plate_at":"gripper","pose":[300.0,-200.0,130.0]},"tag":"recv","text":"0"},{"i":15,"state":null,"tag":"send","text":"set_position(x=300,y=-200,z=50,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":16,"state":{"error_code":0,"jaw_max":850,"jaw_units":156,"plate_at":"gripper","pose":[300.0,-200.0,50.0]},"tag":"recv","text":"0"},{"i":17,"state":null,"tag":"send","text":"set_gripper_position(850,wait=True,speed=0)"},{"i":18,"state":{"error_code":0,"jaw_max":850,"jaw_units":850,"plate_at":"reader","pose":[300.0,-200.0,50.0]},"tag":"recv","text":"0"},{"i":19,"state":null,"tag":"send","text":"set_position(x=300,y=-200,z=130,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":20,"state":{"error_code":0,"jaw_max":850,"jaw_units":850,"plate_at":"reader","pose":[300.0,-200.0,130.0]},"tag":"recv","text":"0"},{"i":21,"state":null,"tag":"state","text":"plate at reader, pose [300, -200, 130], error_code 0"},{"i":22,"state":null,"tag":"done","text":"completed: plate at reader nest, jaws at 850 of 850 units, error_code 0"}]},"lost_reply":{"case":"lost_reply","evidence":"place move sent 1 time, no reply in 0.2 s; plate position unknown","name":"UFACTORY xArm 6 plate arm","outcome":"hold","simulated":true,"station":"xarm","steps":[{"i":0,"state":{"error_code":0,"jaw_max":850,"jaw_units":850,"plate_at":"hotel","pose":[300.0,0.0,300.0]},"tag":"ask","text":"setup()"},{"i":1,"state":null,"tag":"state","text":"setup made 9 SDK calls, all returned 0; mode 0, state 0, gripper enabled True"},{"i":2,"state":null,"tag":"ask","text":"carry 1 plate: hotel nest -> reader nest"},{"i":3,"state":null,"tag":"send","text":"set_position(x=300,y=200,z=180,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":4,"state":{"error_code":0,"jaw_max":850,"jaw_units":850,"plate_at":"hotel","pose":[300.0,200.0,180.0]},"tag":"recv","text":"0"},{"i":5,"state":null,"tag":"send","text":"set_gripper_position(850,wait=True,speed=0)"},{"i":6,"state":null,"tag":"recv","text":"0"},{"i":7,"state":null,"tag":"send","text":"set_position(x=300,y=200,z=100,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":8,"state":{"error_code":0,"jaw_max":850,"jaw_units":850,"plate_at":"hotel","pose":[300.0,200.0,100.0]},"tag":"recv","text":"0"},{"i":9,"state":null,"tag":"send","text":"set_gripper_position(97,wait=True,speed=0)"},{"i":10,"state":{"error_code":0,"jaw_max":850,"jaw_units":156,"plate_at":"gripper","pose":[300.0,200.0,100.0]},"tag":"recv","text":"0"},{"i":11,"state":null,"tag":"send","text":"set_position(x=300,y=200,z=180,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":12,"state":{"error_code":0,"jaw_max":850,"jaw_units":156,"plate_at":"gripper","pose":[300.0,200.0,180.0]},"tag":"recv","text":"0"},{"i":13,"state":null,"tag":"send","text":"set_position(x=300,y=-200,z=130,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":14,"state":{"error_code":0,"jaw_max":850,"jaw_units":156,"plate_at":"gripper","pose":[300.0,-200.0,130.0]},"tag":"recv","text":"0"},{"i":15,"state":null,"tag":"send","text":"set_position(x=300,y=-200,z=50,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":16,"state":{"error_code":0,"jaw_max":850,"jaw_units":156,"plate_at":"gripper","pose":[300.0,-200.0,50.0]},"tag":"state","text":"plate at gripper, pose [300, -200, 50], error_code 0"},{"i":17,"state":null,"tag":"done","text":"hold: place move sent 1 time, no reply in 0.2 s; plate position unknown"}]},"device_error":{"case":"device_error","evidence":"XArm6Error 1: Failed during set_position; sim error 31 (collision), unread by XArm6","name":"UFACTORY xArm 6 plate arm","outcome":"error","simulated":true,"station":"xarm","steps":[{"i":0,"state":{"error_code":0,"jaw_max":850,"jaw_units":850,"plate_at":"hotel","pose":[300.0,0.0,300.0]},"tag":"ask","text":"setup()"},{"i":1,"state":null,"tag":"state","text":"setup made 9 SDK calls, all returned 0; mode 0, state 0, gripper enabled True"},{"i":2,"state":null,"tag":"ask","text":"carry 1 plate: hotel nest -> reader nest"},{"i":3,"state":null,"tag":"send","text":"set_position(x=300,y=200,z=180,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":4,"state":{"error_code":0,"jaw_max":850,"jaw_units":850,"plate_at":"hotel","pose":[300.0,200.0,180.0]},"tag":"recv","text":"0"},{"i":5,"state":null,"tag":"send","text":"set_gripper_position(850,wait=True,speed=0)"},{"i":6,"state":null,"tag":"recv","text":"0"},{"i":7,"state":null,"tag":"send","text":"set_position(x=300,y=200,z=100,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":8,"state":{"error_code":0,"jaw_max":850,"jaw_units":850,"plate_at":"hotel","pose":[300.0,200.0,100.0]},"tag":"recv","text":"0"},{"i":9,"state":null,"tag":"send","text":"set_gripper_position(97,wait=True,speed=0)"},{"i":10,"state":{"error_code":0,"jaw_max":850,"jaw_units":156,"plate_at":"gripper","pose":[300.0,200.0,100.0]},"tag":"recv","text":"0"},{"i":11,"state":null,"tag":"send","text":"set_position(x=300,y=200,z=180,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":12,"state":{"error_code":0,"jaw_max":850,"jaw_units":156,"plate_at":"gripper","pose":[300.0,200.0,180.0]},"tag":"recv","text":"0"},{"i":13,"state":null,"tag":"send","text":"set_position(x=300,y=-200,z=130,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":14,"state":{"error_code":0,"jaw_max":850,"jaw_units":156,"plate_at":"gripper","pose":[300.0,-200.0,130.0]},"tag":"recv","text":"0"},{"i":15,"state":null,"tag":"send","text":"set_position(x=300,y=-200,z=50,roll=180,pitch=0,yaw=0,speed=100,mvacc=2000,wait=True)"},{"i":16,"state":{"error_code":31,"jaw_max":850,"jaw_units":156,"plate_at":"gripper","pose":[300.0,-200.0,130.0]},"tag":"recv","text":"1"},{"i":17,"state":null,"tag":"state","text":"plate at gripper, pose [300, -200, 130], error_code 31"},{"i":18,"state":null,"tag":"done","text":"error: XArm6Error 1: Failed during set_position; sim error 31 (collision), unread by XArm6"}]}},"hotel":{"clean":{"case":"clean","evidence":"pickup confirmed, slot 5 free","name":"Passive plate hotel","outcome":"completed","simulated":true,"station":"hotel","steps":[{"i":0,"state":{"clock_s":0.0,"dwell_s":600.0,"occupied":[],"pickups":0,"reserved":[],"slots":24},"tag":"ask","text":"reserve slot 5, place, dwell 600 s, pick up"},{"i":1,"state":{"clock_s":0.0,"dwell_s":600.0,"occupied":[],"pickups":0,"reserved":[5],"slots":24},"tag":"send","text":"place slot=5 plate=assay_plate_1"},{"i":2,"state":{"clock_s":0.0,"dwell_s":600.0,"occupied":[5],"pickups":0,"reserved":[5],"slots":24},"tag":"recv","text":"place ok slot=5"},{"i":3,"state":{"clock_s":600.0,"dwell_s":600.0,"occupied":[5],"pickups":0,"reserved":[5],"slots":24},"tag":"state","text":"t=600 s, dwell done: True"},{"i":4,"state":null,"tag":"send","text":"pickup slot=5 plate=assay_plate_1"},{"i":5,"state":{"clock_s":600.0,"dwell_s":600.0,"occupied":[],"pickups":1,"reserved":[5],"slots":24},"tag":"recv","text":"pickup ok slot=5"},{"i":6,"state":{"clock_s":600.0,"dwell_s":600.0,"occupied":[],"pickups":1,"reserved":[],"slots":24},"tag":"state","text":"model slot 5: None; shelf 5: None; reserved: []"},{"i":7,"state":null,"tag":"done","text":"completed: pickup confirmed, slot 5 free"}]},"lost_reply":{"case":"lost_reply","evidence":"pickup sent 1 time, no confirmation; slot 5 stays reserved","name":"Passive plate hotel","outcome":"hold","simulated":true,"station":"hotel","steps":[{"i":0,"state":{"clock_s":0.0,"dwell_s":600.0,"occupied":[],"pickups":0,"reserved":[],"slots":24},"tag":"ask","text":"reserve slot 5, place, dwell 600 s, pick up"},{"i":1,"state":{"clock_s":0.0,"dwell_s":600.0,"occupied":[],"pickups":0,"reserved":[5],"slots":24},"tag":"send","text":"place slot=5 plate=assay_plate_1"},{"i":2,"state":{"clock_s":0.0,"dwell_s":600.0,"occupied":[5],"pickups":0,"reserved":[5],"slots":24},"tag":"recv","text":"place ok slot=5"},{"i":3,"state":{"clock_s":600.0,"dwell_s":600.0,"occupied":[5],"pickups":0,"reserved":[5],"slots":24},"tag":"state","text":"t=600 s, dwell done: True"},{"i":4,"state":null,"tag":"send","text":"pickup slot=5 plate=assay_plate_1"},{"i":5,"state":{"clock_s":600.0,"dwell_s":600.0,"occupied":[],"pickups":1,"reserved":[5],"slots":24},"tag":"state","text":"model slot 5: assay_plate_1; shelf 5: None; reserved: [5]"},{"i":6,"state":null,"tag":"done","text":"hold: pickup sent 1 time, no confirmation; slot 5 stays reserved"}]},"device_error":{"case":"device_error","evidence":"ValueError: spot 5 already has a resource","name":"Passive plate hotel","outcome":"error","simulated":true,"station":"hotel","steps":[{"i":0,"state":{"clock_s":0.0,"dwell_s":600.0,"occupied":[5],"pickups":0,"reserved":[],"slots":24},"tag":"ask","text":"reserve slot 5, place, dwell 600 s, pick up"},{"i":1,"state":{"clock_s":0.0,"dwell_s":600.0,"occupied":[5],"pickups":0,"reserved":[5],"slots":24},"tag":"state","text":"model slot 5: earlier_plate; shelf 5: earlier_plate; reserved: [5]"},{"i":2,"state":null,"tag":"done","text":"error: ValueError: spot 5 already has a resource"}]}},"reader":{"clean":{"case":"clean","evidence":"384 made-up values, well A1 = 1000","name":"BMG LABTECH PHERAstar FSX","outcome":"completed","simulated":true,"station":"reader","steps":[{"i":0,"state":{"busy":false,"phase":"capture","plates_read":0,"tray":"in","values":null},"tag":"ask","text":"(a) capture: vendor stand-in does 3 actions, 1 at a time, each marked"},{"i":1,"state":{"busy":false,"phase":"capture","plates_read":0,"tray":"out","values":null},"tag":"state","text":"captured tray_out: TODO_1 + TODO_4; tray out, plate on tray, plates read 0"},{"i":2,"state":{"busy":false,"phase":"capture","plates_read":0,"tray":"in","values":null},"tag":"state","text":"captured tray_in: TODO_2 + TODO_4; tray in, plate on tray, plates read 0"},{"i":3,"state":{"busy":false,"phase":"capture","plates_read":1,"tray":"in","values":null},"tag":"state","text":"captured read_plate: TODO_3 + TODO_4; tray in, plate on tray, plates read 1"},{"i":4,"state":{"busy":false,"phase":"decode","plates_read":1,"tray":"in","values":null},"tag":"ask","text":"(b) decode: framing, then group frames by action mark"},{"i":5,"state":null,"tag":"state","text":"6 host frames fit STX|size|hdr|payload|sum24|CR, header 0x3f; Modbus RTU frames found: 0"},{"i":6,"state":null,"tag":"state","text":"in every window (status candidate): b'TODO_4'"},{"i":7,"state":null,"tag":"state","text":"tray_out vs tray_in differ at offsets [9, 12]"},{"i":8,"state":null,"tag":"state","text":"protocol map coverage 4/4"},{"i":9,"state":{"busy":false,"phase":"replay","plates_read":1,"tray":"in","values":null},"tag":"ask","text":"(c) replay TODO_3 (read) behind plr_re guards: armed, actuation allowed (sim)"},{"i":10,"state":null,"tag":"send","text":"02 00 0e 3f 54 4f 44 4f 5f 33 00 02 17 0d"},{"i":11,"state":{"busy":false,"phase":"replay","plates_read":2,"tray":"in","values":[1000,1037,1074,1111,1148,1185,1222,1259,1296,1333,1370,1407,1444,1481,1018,1055,1092,1129,1166,1203,1240,1277,1314,1351,1388,1425,1462,1499,1036,1073,1110,1147,1184,1221,1258,1295,1332,1369,1406,1443,1480,1017,1054,1091,1128,1165,1202,1239,1276,1313,1350,1387,1424,1461,1498,1035,1072,1109,1146,1183,1220,1257,1294,1331,1368,1405,1442,1479,1016,1053,1090,1127,1164,1201,1238,1275,1312,1349,1386,1423,1460,1497,1034,1071,1108,1145,1182,1219,1256,1293,1330,1367,1404,1441,1478,1015,1052,1089,1126,1163,1200,1237,1274,1311,1348,1385,1422,1459,1496,1033,1070,1107,1144,1181,1218,1255,1292,1329,1366,1403,1440,1477,1014,1051,1088,1125,1162,1199,1236,1273,1310,1347,1384,1421,1458,1495,1032,1069,1106,1143,1180,1217,1254,1291,1328,1365,1402,1439,1476,1013,1050,1087,1124,1161,1198,1235,1272,1309,1346,1383,1420,1457,1494,1031,1068,1105,1142,1179,1216,1253,1290,1327,1364,1401,1438,1475,1012,1049,1086,1123,1160,1197,1234,1271,1308,1345,1382,1419,1456,1493,1030,1067,1104,1141,1178,1215,1252,1289,1326,1363,1400,1437,1474,1011,1048,1085,1122,1159,1196,1233,1270,1307,1344,1381,1418,1455,1492,1029,1066,1103,1140,1177,1214,1251,1288,1325,1362,1399,1436,1473,1010,1047,1084,1121,1158,1195,1232,1269,1306,1343,1380,1417,1454,1491,1028,1065,1102,1139,1176,1213,1250,1287,1324,1361,1398,1435,1472,1009,1046,1083,1120,1157,1194,1231,1268,1305,1342,1379,1416,1453,1490,1027,1064,1101,1138,1175,1212,1249,1286,1323,1360,1397,1434,1471,1008,1045,1082,1119,1156,1193,1230,1267,1304,1341,1378,1415,1452,1489,1026,1063,1100,1137,1174,1211,1248,1285,1322,1359,1396,1433,1470,1007,1044,1081,1118,1155,1192,1229,1266,1303,1340,1377,1414,1451,1488,1025,1062,1099,1136,1173,1210,1247,1284,1321,1358,1395,1432,1469,1006,1043,1080,1117,1154,1191,1228,1265,1302,1339,1376,1413,1450,1487,1024,1061,1098,1135,1172,1209,1246,1283,1320,1357,1394,1431,1468,1005,1042,1079,1116,1153,1190,1227,1264,1301,1338,1375,1412,1449,1486,1023,1060,1097,1134,1171]},"tag":"recv","text":"02 03 0c 3f 7d 03 02 00 03 e8 04 0d 04 32 04 57 04 7c 04 a1 04 c6 04 eb ... (780 bytes)"},{"i":12,"state":null,"tag":"state","text":"replay: 384 values back; tray in, plate on tray, plates read 2"},{"i":13,"state":{"busy":false,"phase":"draft","plates_read":2,"tray":"in","values":[1000,1037,1074,1111,1148,1185,1222,1259,1296,1333,1370,1407,1444,1481,1018,1055,1092,1129,1166,1203,1240,1277,1314,1351,1388,1425,1462,1499,1036,1073,1110,1147,1184,1221,1258,1295,1332,1369,1406,1443,1480,1017,1054,1091,1128,1165,1202,1239,1276,1313,1350,1387,1424,1461,1498,1035,1072,1109,1146,1183,1220,1257,1294,1331,1368,1405,1442,1479,1016,1053,1090,1127,1164,1201,1238,1275,1312,1349,1386,1423,1460,1497,1034,1071,1108,1145,1182,1219,1256,1293,1330,1367,1404,1441,1478,1015,1052,1089,1126,1163,1200,1237,1274,1311,1348,1385,1422,1459,1496,1033,1070,1107,1144,1181,1218,1255,1292,1329,1366,1403,1440,1477,1014,1051,1088,1125,1162,1199,1236,1273,1310,1347,1384,1421,1458,1495,1032,1069,1106,1143,1180,1217,1254,1291,1328,1365,1402,1439,1476,1013,1050,1087,1124,1161,1198,1235,1272,1309,1346,1383,1420,1457,1494,1031,1068,1105,1142,1179,1216,1253,1290,1327,1364,1401,1438,1475,1012,1049,1086,1123,1160,1197,1234,1271,1308,1345,1382,1419,1456,1493,1030,1067,1104,1141,1178,1215,1252,1289,1326,1363,1400,1437,1474,1011,1048,1085,1122,1159,1196,1233,1270,1307,1344,1381,1418,1455,1492,1029,1066,1103,1140,1177,1214,1251,1288,1325,1362,1399,1436,1473,1010,1047,1084,1121,1158,1195,1232,1269,1306,1343,1380,1417,1454,1491,1028,1065,1102,1139,1176,1213,1250,1287,1324,1361,1398,1435,1472,1009,1046,1083,1120,1157,1194,1231,1268,1305,1342,1379,1416,1453,1490,1027,1064,1101,1138,1175,1212,1249,1286,1323,1360,1397,1434,1471,1008,1045,1082,1119,1156,1193,1230,1267,1304,1341,1378,1415,1452,1489,1026,1063,1100,1137,1174,1211,1248,1285,1322,1359,1396,1433,1470,1007,1044,1081,1118,1155,1192,1229,1266,1303,1340,1377,1414,1451,1488,1025,1062,1099,1136,1173,1210,1247,1284,1321,1358,1395,1432,1469,1006,1043,1080,1117,1154,1191,1228,1265,1302,1339,1376,1413,1450,1487,1024,1061,1098,1135,1172,1209,1246,1283,1320,1357,1394,1431,1468,1005,1042,1079,1116,1153,1190,1227,1264,1301,1338,1375,1412,1449,1486,1023,1060,1097,1134,1171]},"tag":"ask","text":"(d) the same read through the draft driver class"},{"i":14,"state":null,"tag":"send","text":"02 00 0e 3f 54 4f 44 4f 5f 34 00 02 18 0d"},{"i":15,"state":{"busy":false,"phase":"draft","plates_read":2,"tray":"in","values":null},"tag":"recv","text":"02 00 12 3f 01 03 02 00 05 00 00 00 00 00 00 00 5e 0d"},{"i":16,"state":null,"tag":"send","text":"02 00 0e 3f 54 4f 44 4f 5f 33 00 02 17 0d"},{"i":17,"state":{"busy":false,"phase":"draft","plates_read":3,"tray":"in","values":[1000,1037,1074,1111,1148,1185,1222,1259,1296,1333,1370,1407,1444,1481,1018,1055,1092,1129,1166,1203,1240,1277,1314,1351,1388,1425,1462,1499,1036,1073,1110,1147,1184,1221,1258,1295,1332,1369,1406,1443,1480,1017,1054,1091,1128,1165,1202,1239,1276,1313,1350,1387,1424,1461,1498,1035,1072,1109,1146,1183,1220,1257,1294,1331,1368,1405,1442,1479,1016,1053,1090,1127,1164,1201,1238,1275,1312,1349,1386,1423,1460,1497,1034,1071,1108,1145,1182,1219,1256,1293,1330,1367,1404,1441,1478,1015,1052,1089,1126,1163,1200,1237,1274,1311,1348,1385,1422,1459,1496,1033,1070,1107,1144,1181,1218,1255,1292,1329,1366,1403,1440,1477,1014,1051,1088,1125,1162,1199,1236,1273,1310,1347,1384,1421,1458,1495,1032,1069,1106,1143,1180,1217,1254,1291,1328,1365,1402,1439,1476,1013,1050,1087,1124,1161,1198,1235,1272,1309,1346,1383,1420,1457,1494,1031,1068,1105,1142,1179,1216,1253,1290,1327,1364,1401,1438,1475,1012,1049,1086,1123,1160,1197,1234,1271,1308,1345,1382,1419,1456,1493,1030,1067,1104,1141,1178,1215,1252,1289,1326,1363,1400,1437,1474,1011,1048,1085,1122,1159,1196,1233,1270,1307,1344,1381,1418,1455,1492,1029,1066,1103,1140,1177,1214,1251,1288,1325,1362,1399,1436,1473,1010,1047,1084,1121,1158,1195,1232,1269,1306,1343,1380,1417,1454,1491,1028,1065,1102,1139,1176,1213,1250,1287,1324,1361,1398,1435,1472,1009,1046,1083,1120,1157,1194,1231,1268,1305,1342,1379,1416,1453,1490,1027,1064,1101,1138,1175,1212,1249,1286,1323,1360,1397,1434,1471,1008,1045,1082,1119,1156,1193,1230,1267,1304,1341,1378,1415,1452,1489,1026,1063,1100,1137,1174,1211,1248,1285,1322,1359,1396,1433,1470,1007,1044,1081,1118,1155,1192,1229,1266,1303,1340,1377,1414,1451,1488,1025,1062,1099,1136,1173,1210,1247,1284,1321,1358,1395,1432,1469,1006,1043,1080,1117,1154,1191,1228,1265,1302,1339,1376,1413,1450,1487,1024,1061,1098,1135,1172,1209,1246,1283,1320,1357,1394,1431,1468,1005,1042,1079,1116,1153,1190,1227,1264,1301,1338,1375,1412,1449,1486,1023,1060,1097,1134,1171]},"tag":"recv","text":"02 03 0c 3f 7d 03 02 00 03 e8 04 0d 04 32 04 57 04 7c 04 a1 04 c6 04 eb ... (780 bytes)"},{"i":18,"state":null,"tag":"state","text":"tray in, plate on tray, plates read 3; executed in (d): {'TODO_3': 1}"},{"i":19,"state":null,"tag":"done","text":"completed: 384 made-up values, well A1 = 1000"}]},"lost_reply":{"case":"lost_reply","evidence":"no reply to b'TODO_3'; not re-sent, reader state unknown","name":"BMG LABTECH PHERAstar FSX","outcome":"hold","simulated":true,"station":"reader","steps":[{"i":0,"state":{"busy":false,"phase":"capture","plates_read":0,"tray":"in","values":null},"tag":"ask","text":"(a) capture: vendor stand-in does 3 actions, 1 at a time, each marked"},{"i":1,"state":{"busy":false,"phase":"capture","plates_read":0,"tray":"out","values":null},"tag":"state","text":"captured tray_out: TODO_1 + TODO_4; tray out, plate on tray, plates read 0"},{"i":2,"state":{"busy":false,"phase":"capture","plates_read":0,"tray":"in","values":null},"tag":"state","text":"captured tray_in: TODO_2 + TODO_4; tray in, plate on tray, plates read 0"},{"i":3,"state":{"busy":false,"phase":"capture","plates_read":1,"tray":"in","values":null},"tag":"state","text":"captured read_plate: TODO_3 + TODO_4; tray in, plate on tray, plates read 1"},{"i":4,"state":{"busy":false,"phase":"decode","plates_read":1,"tray":"in","values":null},"tag":"ask","text":"(b) decode: framing, then group frames by action mark"},{"i":5,"state":null,"tag":"state","text":"6 host frames fit STX|size|hdr|payload|sum24|CR, header 0x3f; Modbus RTU frames found: 0"},{"i":6,"state":null,"tag":"state","text":"in every window (status candidate): b'TODO_4'"},{"i":7,"state":null,"tag":"state","text":"tray_out vs tray_in differ at offsets [9, 12]"},{"i":8,"state":null,"tag":"state","text":"protocol map coverage 4/4"},{"i":9,"state":{"busy":false,"phase":"replay","plates_read":1,"tray":"in","values":null},"tag":"ask","text":"(c) replay TODO_3 (read) behind plr_re guards: armed, actuation allowed (sim)"},{"i":10,"state":null,"tag":"send","text":"02 00 0e 3f 54 4f 44 4f 5f 33 00 02 17 0d"},{"i":11,"state":{"busy":false,"phase":"replay","plates_read":2,"tray":"in","values":[1000,1037,1074,1111,1148,1185,1222,1259,1296,1333,1370,1407,1444,1481,1018,1055,1092,1129,1166,1203,1240,1277,1314,1351,1388,1425,1462,1499,1036,1073,1110,1147,1184,1221,1258,1295,1332,1369,1406,1443,1480,1017,1054,1091,1128,1165,1202,1239,1276,1313,1350,1387,1424,1461,1498,1035,1072,1109,1146,1183,1220,1257,1294,1331,1368,1405,1442,1479,1016,1053,1090,1127,1164,1201,1238,1275,1312,1349,1386,1423,1460,1497,1034,1071,1108,1145,1182,1219,1256,1293,1330,1367,1404,1441,1478,1015,1052,1089,1126,1163,1200,1237,1274,1311,1348,1385,1422,1459,1496,1033,1070,1107,1144,1181,1218,1255,1292,1329,1366,1403,1440,1477,1014,1051,1088,1125,1162,1199,1236,1273,1310,1347,1384,1421,1458,1495,1032,1069,1106,1143,1180,1217,1254,1291,1328,1365,1402,1439,1476,1013,1050,1087,1124,1161,1198,1235,1272,1309,1346,1383,1420,1457,1494,1031,1068,1105,1142,1179,1216,1253,1290,1327,1364,1401,1438,1475,1012,1049,1086,1123,1160,1197,1234,1271,1308,1345,1382,1419,1456,1493,1030,1067,1104,1141,1178,1215,1252,1289,1326,1363,1400,1437,1474,1011,1048,1085,1122,1159,1196,1233,1270,1307,1344,1381,1418,1455,1492,1029,1066,1103,1140,1177,1214,1251,1288,1325,1362,1399,1436,1473,1010,1047,1084,1121,1158,1195,1232,1269,1306,1343,1380,1417,1454,1491,1028,1065,1102,1139,1176,1213,1250,1287,1324,1361,1398,1435,1472,1009,1046,1083,1120,1157,1194,1231,1268,1305,1342,1379,1416,1453,1490,1027,1064,1101,1138,1175,1212,1249,1286,1323,1360,1397,1434,1471,1008,1045,1082,1119,1156,1193,1230,1267,1304,1341,1378,1415,1452,1489,1026,1063,1100,1137,1174,1211,1248,1285,1322,1359,1396,1433,1470,1007,1044,1081,1118,1155,1192,1229,1266,1303,1340,1377,1414,1451,1488,1025,1062,1099,1136,1173,1210,1247,1284,1321,1358,1395,1432,1469,1006,1043,1080,1117,1154,1191,1228,1265,1302,1339,1376,1413,1450,1487,1024,1061,1098,1135,1172,1209,1246,1283,1320,1357,1394,1431,1468,1005,1042,1079,1116,1153,1190,1227,1264,1301,1338,1375,1412,1449,1486,1023,1060,1097,1134,1171]},"tag":"recv","text":"02 03 0c 3f 7d 03 02 00 03 e8 04 0d 04 32 04 57 04 7c 04 a1 04 c6 04 eb ... (780 bytes)"},{"i":12,"state":null,"tag":"state","text":"replay: 384 values back; tray in, plate on tray, plates read 2"},{"i":13,"state":{"busy":false,"phase":"draft","plates_read":2,"tray":"in","values":[1000,1037,1074,1111,1148,1185,1222,1259,1296,1333,1370,1407,1444,1481,1018,1055,1092,1129,1166,1203,1240,1277,1314,1351,1388,1425,1462,1499,1036,1073,1110,1147,1184,1221,1258,1295,1332,1369,1406,1443,1480,1017,1054,1091,1128,1165,1202,1239,1276,1313,1350,1387,1424,1461,1498,1035,1072,1109,1146,1183,1220,1257,1294,1331,1368,1405,1442,1479,1016,1053,1090,1127,1164,1201,1238,1275,1312,1349,1386,1423,1460,1497,1034,1071,1108,1145,1182,1219,1256,1293,1330,1367,1404,1441,1478,1015,1052,1089,1126,1163,1200,1237,1274,1311,1348,1385,1422,1459,1496,1033,1070,1107,1144,1181,1218,1255,1292,1329,1366,1403,1440,1477,1014,1051,1088,1125,1162,1199,1236,1273,1310,1347,1384,1421,1458,1495,1032,1069,1106,1143,1180,1217,1254,1291,1328,1365,1402,1439,1476,1013,1050,1087,1124,1161,1198,1235,1272,1309,1346,1383,1420,1457,1494,1031,1068,1105,1142,1179,1216,1253,1290,1327,1364,1401,1438,1475,1012,1049,1086,1123,1160,1197,1234,1271,1308,1345,1382,1419,1456,1493,1030,1067,1104,1141,1178,1215,1252,1289,1326,1363,1400,1437,1474,1011,1048,1085,1122,1159,1196,1233,1270,1307,1344,1381,1418,1455,1492,1029,1066,1103,1140,1177,1214,1251,1288,1325,1362,1399,1436,1473,1010,1047,1084,1121,1158,1195,1232,1269,1306,1343,1380,1417,1454,1491,1028,1065,1102,1139,1176,1213,1250,1287,1324,1361,1398,1435,1472,1009,1046,1083,1120,1157,1194,1231,1268,1305,1342,1379,1416,1453,1490,1027,1064,1101,1138,1175,1212,1249,1286,1323,1360,1397,1434,1471,1008,1045,1082,1119,1156,1193,1230,1267,1304,1341,1378,1415,1452,1489,1026,1063,1100,1137,1174,1211,1248,1285,1322,1359,1396,1433,1470,1007,1044,1081,1118,1155,1192,1229,1266,1303,1340,1377,1414,1451,1488,1025,1062,1099,1136,1173,1210,1247,1284,1321,1358,1395,1432,1469,1006,1043,1080,1117,1154,1191,1228,1265,1302,1339,1376,1413,1450,1487,1024,1061,1098,1135,1172,1209,1246,1283,1320,1357,1394,1431,1468,1005,1042,1079,1116,1153,1190,1227,1264,1301,1338,1375,1412,1449,1486,1023,1060,1097,1134,1171]},"tag":"ask","text":"(d) the same read through the draft driver class"},{"i":14,"state":null,"tag":"send","text":"02 00 0e 3f 54 4f 44 4f 5f 34 00 02 18 0d"},{"i":15,"state":{"busy":false,"phase":"draft","plates_read":2,"tray":"in","values":null},"tag":"recv","text":"02 00 12 3f 01 03 02 00 05 00 00 00 00 00 00 00 5e 0d"},{"i":16,"state":null,"tag":"send","text":"02 00 0e 3f 54 4f 44 4f 5f 33 00 02 17 0d"},{"i":17,"state":{"busy":false,"phase":"draft","plates_read":3,"tray":"in","values":null},"tag":"state","text":"tray in, plate on tray, plates read 3; executed in (d): {'TODO_3': 1}"},{"i":18,"state":null,"tag":"done","text":"hold: no reply to b'TODO_3'; not re-sent, reader state unknown"}]},"device_error":{"case":"device_error","evidence":"device error codes (6, 0, 0, 0, 0) (synthetic code)","name":"BMG LABTECH PHERAstar FSX","outcome":"error","simulated":true,"station":"reader","steps":[{"i":0,"state":{"busy":false,"phase":"capture","plates_read":0,"tray":"in","values":null},"tag":"ask","text":"(a) capture: vendor stand-in does 3 actions, 1 at a time, each marked"},{"i":1,"state":{"busy":false,"phase":"capture","plates_read":0,"tray":"out","values":null},"tag":"state","text":"captured tray_out: TODO_1 + TODO_4; tray out, plate on tray, plates read 0"},{"i":2,"state":{"busy":false,"phase":"capture","plates_read":0,"tray":"in","values":null},"tag":"state","text":"captured tray_in: TODO_2 + TODO_4; tray in, plate on tray, plates read 0"},{"i":3,"state":{"busy":false,"phase":"capture","plates_read":1,"tray":"in","values":null},"tag":"state","text":"captured read_plate: TODO_3 + TODO_4; tray in, plate on tray, plates read 1"},{"i":4,"state":{"busy":false,"phase":"decode","plates_read":1,"tray":"in","values":null},"tag":"ask","text":"(b) decode: framing, then group frames by action mark"},{"i":5,"state":null,"tag":"state","text":"6 host frames fit STX|size|hdr|payload|sum24|CR, header 0x3f; Modbus RTU frames found: 0"},{"i":6,"state":null,"tag":"state","text":"in every window (status candidate): b'TODO_4'"},{"i":7,"state":null,"tag":"state","text":"tray_out vs tray_in differ at offsets [9, 12]"},{"i":8,"state":null,"tag":"state","text":"protocol map coverage 4/4"},{"i":9,"state":{"busy":false,"phase":"replay","plates_read":1,"tray":"in","values":null},"tag":"ask","text":"(c) replay TODO_3 (read) behind plr_re guards: armed, actuation allowed (sim)"},{"i":10,"state":null,"tag":"send","text":"02 00 0e 3f 54 4f 44 4f 5f 33 00 02 17 0d"},{"i":11,"state":{"busy":false,"phase":"replay","plates_read":2,"tray":"in","values":[1000,1037,1074,1111,1148,1185,1222,1259,1296,1333,1370,1407,1444,1481,1018,1055,1092,1129,1166,1203,1240,1277,1314,1351,1388,1425,1462,1499,1036,1073,1110,1147,1184,1221,1258,1295,1332,1369,1406,1443,1480,1017,1054,1091,1128,1165,1202,1239,1276,1313,1350,1387,1424,1461,1498,1035,1072,1109,1146,1183,1220,1257,1294,1331,1368,1405,1442,1479,1016,1053,1090,1127,1164,1201,1238,1275,1312,1349,1386,1423,1460,1497,1034,1071,1108,1145,1182,1219,1256,1293,1330,1367,1404,1441,1478,1015,1052,1089,1126,1163,1200,1237,1274,1311,1348,1385,1422,1459,1496,1033,1070,1107,1144,1181,1218,1255,1292,1329,1366,1403,1440,1477,1014,1051,1088,1125,1162,1199,1236,1273,1310,1347,1384,1421,1458,1495,1032,1069,1106,1143,1180,1217,1254,1291,1328,1365,1402,1439,1476,1013,1050,1087,1124,1161,1198,1235,1272,1309,1346,1383,1420,1457,1494,1031,1068,1105,1142,1179,1216,1253,1290,1327,1364,1401,1438,1475,1012,1049,1086,1123,1160,1197,1234,1271,1308,1345,1382,1419,1456,1493,1030,1067,1104,1141,1178,1215,1252,1289,1326,1363,1400,1437,1474,1011,1048,1085,1122,1159,1196,1233,1270,1307,1344,1381,1418,1455,1492,1029,1066,1103,1140,1177,1214,1251,1288,1325,1362,1399,1436,1473,1010,1047,1084,1121,1158,1195,1232,1269,1306,1343,1380,1417,1454,1491,1028,1065,1102,1139,1176,1213,1250,1287,1324,1361,1398,1435,1472,1009,1046,1083,1120,1157,1194,1231,1268,1305,1342,1379,1416,1453,1490,1027,1064,1101,1138,1175,1212,1249,1286,1323,1360,1397,1434,1471,1008,1045,1082,1119,1156,1193,1230,1267,1304,1341,1378,1415,1452,1489,1026,1063,1100,1137,1174,1211,1248,1285,1322,1359,1396,1433,1470,1007,1044,1081,1118,1155,1192,1229,1266,1303,1340,1377,1414,1451,1488,1025,1062,1099,1136,1173,1210,1247,1284,1321,1358,1395,1432,1469,1006,1043,1080,1117,1154,1191,1228,1265,1302,1339,1376,1413,1450,1487,1024,1061,1098,1135,1172,1209,1246,1283,1320,1357,1394,1431,1468,1005,1042,1079,1116,1153,1190,1227,1264,1301,1338,1375,1412,1449,1486,1023,1060,1097,1134,1171]},"tag":"recv","text":"02 03 0c 3f 7d 03 02 00 03 e8 04 0d 04 32 04 57 04 7c 04 a1 04 c6 04 eb ... (780 bytes)"},{"i":12,"state":null,"tag":"state","text":"replay: 384 values back; tray in, plate on tray, plates read 2"},{"i":13,"state":{"busy":false,"phase":"draft","plates_read":2,"tray":"in","values":[1000,1037,1074,1111,1148,1185,1222,1259,1296,1333,1370,1407,1444,1481,1018,1055,1092,1129,1166,1203,1240,1277,1314,1351,1388,1425,1462,1499,1036,1073,1110,1147,1184,1221,1258,1295,1332,1369,1406,1443,1480,1017,1054,1091,1128,1165,1202,1239,1276,1313,1350,1387,1424,1461,1498,1035,1072,1109,1146,1183,1220,1257,1294,1331,1368,1405,1442,1479,1016,1053,1090,1127,1164,1201,1238,1275,1312,1349,1386,1423,1460,1497,1034,1071,1108,1145,1182,1219,1256,1293,1330,1367,1404,1441,1478,1015,1052,1089,1126,1163,1200,1237,1274,1311,1348,1385,1422,1459,1496,1033,1070,1107,1144,1181,1218,1255,1292,1329,1366,1403,1440,1477,1014,1051,1088,1125,1162,1199,1236,1273,1310,1347,1384,1421,1458,1495,1032,1069,1106,1143,1180,1217,1254,1291,1328,1365,1402,1439,1476,1013,1050,1087,1124,1161,1198,1235,1272,1309,1346,1383,1420,1457,1494,1031,1068,1105,1142,1179,1216,1253,1290,1327,1364,1401,1438,1475,1012,1049,1086,1123,1160,1197,1234,1271,1308,1345,1382,1419,1456,1493,1030,1067,1104,1141,1178,1215,1252,1289,1326,1363,1400,1437,1474,1011,1048,1085,1122,1159,1196,1233,1270,1307,1344,1381,1418,1455,1492,1029,1066,1103,1140,1177,1214,1251,1288,1325,1362,1399,1436,1473,1010,1047,1084,1121,1158,1195,1232,1269,1306,1343,1380,1417,1454,1491,1028,1065,1102,1139,1176,1213,1250,1287,1324,1361,1398,1435,1472,1009,1046,1083,1120,1157,1194,1231,1268,1305,1342,1379,1416,1453,1490,1027,1064,1101,1138,1175,1212,1249,1286,1323,1360,1397,1434,1471,1008,1045,1082,1119,1156,1193,1230,1267,1304,1341,1378,1415,1452,1489,1026,1063,1100,1137,1174,1211,1248,1285,1322,1359,1396,1433,1470,1007,1044,1081,1118,1155,1192,1229,1266,1303,1340,1377,1414,1451,1488,1025,1062,1099,1136,1173,1210,1247,1284,1321,1358,1395,1432,1469,1006,1043,1080,1117,1154,1191,1228,1265,1302,1339,1376,1413,1450,1487,1024,1061,1098,1135,1172,1209,1246,1283,1320,1357,1394,1431,1468,1005,1042,1079,1116,1153,1190,1227,1264,1301,1338,1375,1412,1449,1486,1023,1060,1097,1134,1171]},"tag":"ask","text":"(d) the same read through the draft driver class"},{"i":14,"state":null,"tag":"send","text":"02 00 0e 3f 54 4f 44 4f 5f 34 00 02 18 0d"},{"i":15,"state":{"busy":false,"phase":"draft","plates_read":2,"tray":"in","values":null},"tag":"recv","text":"02 00 12 3f 01 03 02 00 05 00 00 00 00 00 00 00 5e 0d"},{"i":16,"state":null,"tag":"send","text":"02 00 0e 3f 54 4f 44 4f 5f 33 00 02 17 0d"},{"i":17,"state":null,"tag":"recv","text":"02 00 12 3f 01 43 02 00 05 06 00 00 00 00 00 00 a4 0d"},{"i":18,"state":null,"tag":"state","text":"tray in, plate on tray, plates read 2; executed in (d): {}"},{"i":19,"state":null,"tag":"done","text":"error: device error codes (6, 0, 0, 0, 0) (synthetic code)"}]}},"lcms":{"clean":{"case":"clean","evidence":"8/8 injections matched to a raw file","name":"Shared LC-MS bench","outcome":"completed","simulated":true,"station":"lcms","steps":[{"i":0,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":null,"started":0},{"aliquot":"PLATE01-B1","raw":null,"started":0},{"aliquot":"PLATE01-C1","raw":null,"started":0},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"ask","text":"run sequence.csv: 8 injections from PLATE01, 1 start each"},{"i":1,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":2,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":null,"started":0},{"aliquot":"PLATE01-C1","raw":null,"started":0},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"001_PLATE01-A1.raw.stub"},{"i":3,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":4,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":null,"started":0},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"002_PLATE01-B1.raw.stub"},{"i":5,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":6,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":"003_PLATE01-C1.raw.stub","started":1},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"003_PLATE01-C1.raw.stub"},{"i":7,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":8,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":"003_PLATE01-C1.raw.stub","started":1},{"aliquot":"PLATE01-D1","raw":"004_PLATE01-D1.raw.stub","started":1},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"004_PLATE01-D1.raw.stub"},{"i":9,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":10,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":"003_PLATE01-C1.raw.stub","started":1},{"aliquot":"PLATE01-D1","raw":"004_PLATE01-D1.raw.stub","started":1},{"aliquot":"PLATE01-E1","raw":"005_PLATE01-E1.raw.stub","started":1},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"005_PLATE01-E1.raw.stub"},{"i":11,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":12,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":"003_PLATE01-C1.raw.stub","started":1},{"aliquot":"PLATE01-D1","raw":"004_PLATE01-D1.raw.stub","started":1},{"aliquot":"PLATE01-E1","raw":"005_PLATE01-E1.raw.stub","started":1},{"aliquot":"PLATE01-F1","raw":"006_PLATE01-F1.raw.stub","started":1},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"006_PLATE01-F1.raw.stub"},{"i":13,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":14,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":"003_PLATE01-C1.raw.stub","started":1},{"aliquot":"PLATE01-D1","raw":"004_PLATE01-D1.raw.stub","started":1},{"aliquot":"PLATE01-E1","raw":"005_PLATE01-E1.raw.stub","started":1},{"aliquot":"PLATE01-F1","raw":"006_PLATE01-F1.raw.stub","started":1},{"aliquot":"PLATE01-G1","raw":"007_PLATE01-G1.raw.stub","started":1},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"007_PLATE01-G1.raw.stub"},{"i":15,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":16,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":"003_PLATE01-C1.raw.stub","started":1},{"aliquot":"PLATE01-D1","raw":"004_PLATE01-D1.raw.stub","started":1},{"aliquot":"PLATE01-E1","raw":"005_PLATE01-E1.raw.stub","started":1},{"aliquot":"PLATE01-F1","raw":"006_PLATE01-F1.raw.stub","started":1},{"aliquot":"PLATE01-G1","raw":"007_PLATE01-G1.raw.stub","started":1},{"aliquot":"PLATE01-H1","raw":"008_PLATE01-H1.raw.stub","started":1}]},"tag":"recv","text":"008_PLATE01-H1.raw.stub"},{"i":17,"state":null,"tag":"state","text":"ready True, rows started 8/8, raw files 8; starts per aliquot max 1"},{"i":18,"state":null,"tag":"done","text":"completed: 8/8 injections matched to a raw file"}]},"lost_reply":{"case":"lost_reply","evidence":"row 4 PLATE01-D1 started, no raw file; not re-injected","name":"Shared LC-MS bench","outcome":"hold","simulated":true,"station":"lcms","steps":[{"i":0,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":null,"started":0},{"aliquot":"PLATE01-B1","raw":null,"started":0},{"aliquot":"PLATE01-C1","raw":null,"started":0},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"ask","text":"run sequence.csv: 8 injections from PLATE01, 1 start each"},{"i":1,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":2,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":null,"started":0},{"aliquot":"PLATE01-C1","raw":null,"started":0},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"001_PLATE01-A1.raw.stub"},{"i":3,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":4,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":null,"started":0},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"002_PLATE01-B1.raw.stub"},{"i":5,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":6,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":"003_PLATE01-C1.raw.stub","started":1},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"003_PLATE01-C1.raw.stub"},{"i":7,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":8,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":"003_PLATE01-C1.raw.stub","started":1},{"aliquot":"PLATE01-D1","raw":null,"started":1},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"state","text":"ready True, rows started 4/8, raw files 3; starts per aliquot max 1"},{"i":9,"state":null,"tag":"done","text":"hold: row 4 PLATE01-D1 started, no raw file; not re-injected"}]},"device_error":{"case":"device_error","evidence":"Ready low before row 4: not ready: simulated pump pressure fault; no Start sent","name":"Shared LC-MS bench","outcome":"error","simulated":true,"station":"lcms","steps":[{"i":0,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":null,"started":0},{"aliquot":"PLATE01-B1","raw":null,"started":0},{"aliquot":"PLATE01-C1","raw":null,"started":0},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"ask","text":"run sequence.csv: 8 injections from PLATE01, 1 start each"},{"i":1,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":2,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":null,"started":0},{"aliquot":"PLATE01-C1","raw":null,"started":0},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"001_PLATE01-A1.raw.stub"},{"i":3,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":4,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":null,"started":0},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"002_PLATE01-B1.raw.stub"},{"i":5,"state":null,"tag":"send","text":"[dry-run] would pulse START on BCM27 for 0.25s"},{"i":6,"state":{"ready":true,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":"003_PLATE01-C1.raw.stub","started":1},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"recv","text":"003_PLATE01-C1.raw.stub"},{"i":7,"state":{"ready":false,"rows":[{"aliquot":"PLATE01-A1","raw":"001_PLATE01-A1.raw.stub","started":1},{"aliquot":"PLATE01-B1","raw":"002_PLATE01-B1.raw.stub","started":1},{"aliquot":"PLATE01-C1","raw":"003_PLATE01-C1.raw.stub","started":1},{"aliquot":"PLATE01-D1","raw":null,"started":0},{"aliquot":"PLATE01-E1","raw":null,"started":0},{"aliquot":"PLATE01-F1","raw":null,"started":0},{"aliquot":"PLATE01-G1","raw":null,"started":0},{"aliquot":"PLATE01-H1","raw":null,"started":0}]},"tag":"state","text":"ready False, rows started 3/8, raw files 3; starts per aliquot max 1"},{"i":8,"state":null,"tag":"done","text":"error: Ready low before row 4: not ready: simulated pump pressure fault; no Start sent"}]}}}}</script>
+<script>
+/* Replay of recorded simulation traces.
+   Part 1 is pure functions with no DOM access (tested from harness/test_replay_page.py).
+   Part 2 is a thin DOM layer that runs only in a browser. */
+var ReplayCore = (function () {
+  "use strict";
+
+  var ORDER = ["culture", "seed", "star", "inc", "rail", "xarm", "hotel", "reader", "lcms"];
+  var CASES = ["clean", "lost_reply", "device_error"];
+  var SPEEDS = { slow: 1100, normal: 520, fast: 160 };
+
+  /* The state at step i: a null state means "same as the previous step". */
+  function stateAt(trace, i) {
+    var steps = trace.steps;
+    for (var k = Math.min(i, steps.length - 1); k >= 0; k--) {
+      if (steps[k].state !== null && steps[k].state !== undefined) return steps[k].state;
+    }
+    return null;
+  }
+
+  /* Before the first recorded state, show that first state: it is the state at rest. */
+  function firstState(trace) {
+    for (var k = 0; k < trace.steps.length; k++) {
+      if (trace.steps[k].state !== null && trace.steps[k].state !== undefined) return trace.steps[k].state;
+    }
+    return null;
+  }
+
+  function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+
+  /* Top-level fields whose value differs between 2 states. Arrays give the changed indexes. */
+  function changes(prev, cur) {
+    var out = {};
+    if (!prev || !cur) return out;
+    for (var k in cur) {
+      if (!Object.prototype.hasOwnProperty.call(cur, k)) continue;
+      if (same(prev[k], cur[k])) continue;
+      if (Array.isArray(cur[k]) && Array.isArray(prev[k]) && prev[k].length === cur[k].length) {
+        var idx = [];
+        for (var j = 0; j < cur[k].length; j++) if (!same(prev[k][j], cur[k][j])) idx.push(j);
+        out[k] = idx;
+      } else {
+        out[k] = true;
+      }
+    }
+    return out;
+  }
+
+  /* 1 station: a sequence of 1 segment. */
+  function single(traces, key, caseName) {
+    return { segments: [{ key: key, trace: traces[key][caseName] }], notAsked: [] };
+  }
+
+  /* All 9: every clean trace in walk order, except the reader, which plays the chosen case.
+     The walk stops after the first trace that does not complete; the rest are not asked. */
+  function buildAll(traces, caseName) {
+    var segs = [], notAsked = [], stopped = false;
+    for (var n = 0; n < ORDER.length; n++) {
+      var key = ORDER[n];
+      if (stopped) { notAsked.push(key); continue; }
+      var tr = traces[key][key === "reader" ? caseName : "clean"];
+      segs.push({ key: key, trace: tr });
+      if (tr.outcome !== "completed") stopped = true;
+    }
+    return { segments: segs, notAsked: notAsked };
+  }
+
+  function total(seq) {
+    var t = 0;
+    for (var n = 0; n < seq.segments.length; n++) t += seq.segments[n].trace.steps.length;
+    return t;
+  }
+
+  /* Global step g -> which segment, and which step inside it. */
+  function locate(seq, g) {
+    var rest = Math.max(0, Math.min(g, total(seq) - 1));
+    for (var n = 0; n < seq.segments.length; n++) {
+      var len = seq.segments[n].trace.steps.length;
+      if (rest < len) return { seg: n, i: rest, last: rest === len - 1 };
+      rest -= len;
+    }
+    return { seg: 0, i: 0, last: false };
+  }
+
+  function outcomeWord(o) {
+    return o === "completed" ? "Completed" : o === "hold" ? "Hold" : o === "error" ? "Error" : o;
+  }
+
+  /* Row labels for the All 9 list at global step g. */
+  function rowStatus(seq, g) {
+    var at = locate(seq, g), end = g >= total(seq) - 1, out = {};
+    for (var n = 0; n < seq.segments.length; n++) {
+      var s = seq.segments[n];
+      if (n < at.seg || (n === at.seg && at.last)) out[s.key] = s.trace.outcome;
+      else if (n === at.seg) out[s.key] = "running";
+      else out[s.key] = "waiting";
+    }
+    for (var m = 0; m < seq.notAsked.length; m++) out[seq.notAsked[m]] = end ? "not asked" : "waiting";
+    return out;
+  }
+
+  function parseHash(hash) {
+    var h = String(hash || "").replace(/^#/, "").toLowerCase();
+    if (h === "all") return "all";
+    return ORDER.indexOf(h) >= 0 ? h : null;
+  }
+
+  /* White at lo, black at hi. */
+  function shade(v, lo, hi) {
+    var f = hi > lo ? (v - lo) / (hi - lo) : 0;
+    f = Math.max(0, Math.min(1, f));
+    var c = Math.round(255 - f * (255 - 17));
+    var h = (c < 16 ? "0" : "") + c.toString(16);
+    return "#" + h + h + h;
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function num(v) {
+    if (v === null || v === undefined) return "-";
+    if (typeof v === "number") return String(Math.round(v * 100) / 100);
+    return String(v);
+  }
+
+  function yes(b) { return b ? "yes" : "no"; }
+
+  function kv(rows) {
+    var h = '<dl class="kv">';
+    for (var n = 0; n < rows.length; n++) {
+      h += "<dt>" + esc(rows[n][0]) + "</dt><dd" + (rows[n][2] ? ' class="chg"' : "") + ">" +
+        esc(rows[n][1]) + "</dd>";
+    }
+    return h + "</dl>";
+  }
+
+  function has(ch, k, j) {
+    if (!ch[k]) return false;
+    if (j === undefined || ch[k] === true) return true;
+    return ch[k].indexOf(j) >= 0;
+  }
+
+  var INK = "#111111", LIGHT = "#cfd0ce", SOFT = "#62666b", WHITE = "#ffffff";
+
+  function rect(x, y, w, h, fill, stroke, sw) {
+    return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="' + fill +
+      '" stroke="' + stroke + '" stroke-width="' + (sw || 1) + '"/>';
+  }
+
+  function text(x, y, s, anchor, size) {
+    return '<text x="' + x + '" y="' + y + '" font-family="Helvetica Neue, Helvetica, Arial, sans-serif"' +
+      ' font-size="' + (size || 10) + '" fill="' + SOFT + '" text-anchor="' + (anchor || "start") + '">' +
+      esc(s) + "</text>";
+  }
+
+  function svg(w, h, body, label) {
+    return '<svg viewBox="0 0 ' + w + " " + h + '" width="' + w + '" role="img" aria-label="' +
+      esc(label) + '">' + body + "</svg>";
+  }
+
+  /* A 16 by 24 plate grid. fillOf(row, col) gives the fill; outlineCols marks changed columns. */
+  function plateGrid(fillOf, outlineCols, outlineAll, label) {
+    var c = 10, g = 2, p = c + g, b = "";
+    for (var r = 0; r < 16; r++) {
+      for (var k = 0; k < 24; k++) {
+        var f = fillOf(r, k);
+        b += rect(2 + k * p, 2 + r * p, c, c, f, f === WHITE ? LIGHT : f, 1);
+      }
+    }
+    for (var n = 0; n < outlineCols.length; n++) {
+      b += rect(1 + outlineCols[n] * p - 1, 0, c + 3, 16 * p + 1, "none", INK, 2);
+    }
+    if (outlineAll) b += rect(0, 0, 24 * p + 2, 16 * p + 2, "none", INK, 2);
+    return svg(24 * p + 4, 16 * p + 4, b, label);
+  }
+
+  function boxes3(names, here, changed) {
+    var h = '<div class="box3">';
+    for (var n = 0; n < 3; n++) {
+      var cls = (n === here ? "here" : "") + (n === here && changed ? " chg" : "");
+      h += '<div class="' + cls + '">' + esc(names[n]) +
+        (n === here ? '<span class="plate" aria-label="plate"></span>' : "") + "</div>";
+    }
+    return h + "</div>";
+  }
+
+  var DRAW = {
+    culture: function (s, ch, prev) {
+      var batches = (s.known_batches || []).slice();
+      for (var b in s.released) if (batches.indexOf(b) < 0) batches.push(b);
+      var h = '<div class="tablebox"><table class="t"><thead><tr><th>Batch</th><th>Worklist</th>' +
+        "<th>Released</th></tr></thead><tbody>";
+      for (var n = 0; n < batches.length; n++) {
+        var id = batches[n], w = s.released[id];
+        var c = prev && !same((prev.released || {})[id], w);
+        h += "<tr" + (c ? ' class="chg"' : "") + "><td>" + esc(id) + "</td><td>" +
+          esc(w === undefined ? "-" : w) + "</td><td>" + (w === undefined ? "no" : "yes") +
+          "</td></tr>";
+      }
+      h += "</tbody></table></div>";
+      return h + kv([["Releases executed", num(s.executed), has(ch, "executed")]]);
+    },
+    seed: function (s, ch) {
+      var cols = s.columns_uL || [], filled = 0, vols = [];
+      for (var k = 0; k < cols.length; k++) {
+        if (cols[k] > 0) { filled++; if (vols.indexOf(cols[k]) < 0) vols.push(cols[k]); }
+      }
+      /* 1 changed column gets its own outline; more than 1 outline the whole plate. */
+      var cc = ch.columns_uL === true ? [0, 1] : (ch.columns_uL || []);
+      var grid = plateGrid(function (r, k) { return cols[k] > 0 ? INK : WHITE; },
+        cc.length > 1 ? [] : cc, cc.length > 1,
+        "384-well plate, " + filled + " of 24 columns dispensed");
+      return grid + kv([
+        ["Plate", s.plate === null ? "none" : s.plate, has(ch, "plate")],
+        ["Batch", s.batch_open ? "open" : "closed", has(ch, "batch_open")],
+        ["Pump", s.pump === null ? "-" : s.pump, has(ch, "pump")],
+        ["Prime", num(s.prime_uL) + " uL", has(ch, "prime_uL")],
+        ["Per well", vols.length ? vols.map(num).join(", ") + " uL" : "0 uL", has(ch, "columns_uL")],
+        ["Columns filled", filled + " of 24", has(ch, "columns_uL")],
+        ["Error", s.error === "" ? "none" : s.error, has(ch, "error")]
+      ]);
+    },
+    star: function (s, ch) {
+      var b = "", maxv = 1, k;
+      var src = s.source_uL || [], dst = s.dest_uL || [], tip = s.tip_uL || [];
+      for (k = 0; k < 8; k++) maxv = Math.max(maxv, src[k] || 0, dst[k] || 0);
+      b += text(0, 10, "Channels", "start", 11);
+      for (k = 0; k < 8; k++) {
+        var x = 2 + k * 36, on = (s.tips_on_channel || [])[k];
+        var c = has(ch, "tips_on_channel", k) || has(ch, "tip_uL", k);
+        b += rect(x, 18, 16, 16, on ? INK : WHITE, c ? INK : (on ? INK : LIGHT), c ? 2.5 : 1);
+        b += text(x + 8, 46, num(tip[k]), "middle", 10);
+      }
+      b += text(2, 72, "Source", "start", 11) + text(152, 72, "Destination", "start", 11);
+      for (k = 0; k < 8; k++) {
+        var y = 80 + k * 18, cs = has(ch, "source_uL", k), cd = has(ch, "dest_uL", k);
+        b += rect(2, y, 12, 12, shade(src[k] || 0, 0, maxv), cs ? INK : LIGHT, cs ? 2.5 : 1);
+        b += text(22, y + 10, num(src[k]) + " uL", "start", 11);
+        b += rect(152, y, 12, 12, shade(dst[k] || 0, 0, maxv), cd ? INK : LIGHT, cd ? 2.5 : 1);
+        b += text(172, y + 10, num(dst[k]) + " uL", "start", 11);
+      }
+      var ontips = (s.tips_on_channel || []).filter(function (t) { return t; }).length;
+      return svg(290, 228, b, "8 channels, " + ontips + " with a tip; source and destination wells") +
+        kv([["Initialized", yes(s.initialized), has(ch, "initialized")],
+            ["Tips on channels", ontips + " of 8", has(ch, "tips_on_channel")],
+            ["Tips in the rack", num(s.tips_in_rack), has(ch, "tips_in_rack")]]);
+    },
+    inc: function (s, ch) {
+      var here = { transfer: 0, shovel: 1, cassette: 2 }[s.plate_at];
+      var slot = "Cassette" + (s.cassette !== null && s.cassette !== undefined ?
+        " " + s.cassette + " / position " + num(s.position) : "");
+      return boxes3(["Transfer station", "Shovel", slot], here, has(ch, "plate_at")) + kv([
+        ["Plate at", s.plate_at, has(ch, "plate_at")],
+        ["Temperature", num(s.temp_c) + " deg C", has(ch, "temp_c")],
+        ["Ready", yes(s.ready), has(ch, "ready")],
+        ["Error", s.error === "" ? "none" : s.error, has(ch, "error")]
+      ]);
+    },
+    rail: function (s, ch) {
+      var w = 300, x0 = 10, x1 = 290, t = s.travel_mm || 1;
+      var X = function (mm) { return x0 + (x1 - x0) * Math.max(0, Math.min(1, mm / t)); };
+      var b = '<line x1="' + x0 + '" y1="30" x2="' + x1 + '" y2="30" stroke="' + INK + '" stroke-width="1"/>';
+      b += '<line x1="' + x0 + '" y1="24" x2="' + x0 + '" y2="36" stroke="' + INK + '"/>';
+      b += '<line x1="' + x1 + '" y1="24" x2="' + x1 + '" y2="36" stroke="' + INK + '"/>';
+      b += text(x0, 54, "0", "middle", 11) + text(x1, 54, num(t) + " mm", "end", 11);
+      if (s.target_mm !== null && s.target_mm !== undefined) {
+        var tx = X(s.target_mm);
+        b += '<line x1="' + tx + '" y1="8" x2="' + tx + '" y2="40" stroke="' + SOFT + '" stroke-width="' +
+          (has(ch, "target_mm") ? 2.5 : 1) + '"/>' + text(tx, 6, "target", "middle", 10);
+      }
+      var px = X(s.pos_mm || 0), c = has(ch, "pos_mm");
+      b += rect(px - 6, 24, 12, 12, INK, INK, 1);
+      if (c) b += rect(px - 9, 21, 18, 18, "none", INK, 2);
+      return svg(w, 60, b, "rail at " + num(s.pos_mm) + " mm") + kv([
+        ["Position", num(s.pos_mm) + " mm", c],
+        ["Target", s.target_mm === null ? "-" : num(s.target_mm) + " mm", has(ch, "target_mm")],
+        ["Travel", num(s.travel_mm) + " mm", has(ch, "travel_mm")],
+        ["Enabled", yes(s.enabled), has(ch, "enabled")],
+        ["Homed", yes(s.homed), has(ch, "homed")],
+        ["Error", num(s.error), has(ch, "error")],
+        ["Moves", num(s.moves), has(ch, "moves")]
+      ]);
+    },
+    xarm: function (s, ch) {
+      var here = { hotel: 0, gripper: 1, reader: 2 }[s.plate_at];
+      var p = s.pose || [], f = s.jaw_max ? Math.max(0, Math.min(1, s.jaw_units / s.jaw_max)) : 0;
+      return boxes3(["Hotel nest", "Gripper", "Reader nest"], here, has(ch, "plate_at")) + kv([
+        ["Pose x, y, z", num(p[0]) + ", " + num(p[1]) + ", " + num(p[2]) + " mm", has(ch, "pose")],
+        ["Jaw opening", num(s.jaw_units) + " of " + num(s.jaw_max) + " units", has(ch, "jaw_units")],
+        ["Error code", num(s.error_code), has(ch, "error_code")]
+      ]) + '<div class="bar' + (has(ch, "jaw_units") ? " chg" : "") + '" style="margin-top:8px">' +
+        '<i style="width:' + Math.round(f * 100) + '%"></i></div>';
+    },
+    hotel: function (s, ch, prev) {
+      var n = s.slots || 24, per = 12, b = "", occ = s.occupied || [], res = s.reserved || [];
+      var po = prev ? prev.occupied || [] : occ, pr = prev ? prev.reserved || [] : res;
+      for (var k = 1; k <= n; k++) {
+        var x = 2 + ((k - 1) % per) * 24, y = 14 + Math.floor((k - 1) / per) * 40;
+        var o = occ.indexOf(k) >= 0, r = res.indexOf(k) >= 0;
+        var c = prev && ((po.indexOf(k) >= 0) !== o || (pr.indexOf(k) >= 0) !== r);
+        b += rect(x, y, 18, 18, o ? INK : WHITE, r ? INK : (o ? INK : LIGHT), r ? 2 : 1);
+        if (c) b += rect(x - 3, y - 3, 24, 24, "none", INK, 1.5);
+        if (k % per === 1 || k % per === 0) b += text(x + 9, y + 30, String(k), "middle", 10);
+      }
+      var done = s.clock_s >= s.dwell_s;
+      return svg(per * 24 + 4, 96, b, occ.length + " of " + n + " slots occupied") + kv([
+        ["Occupied", occ.length ? occ.join(", ") : "none", has(ch, "occupied")],
+        ["Reserved", res.length ? res.join(", ") : "none", has(ch, "reserved")],
+        ["Clock", num(s.clock_s) + " s", has(ch, "clock_s")],
+        ["Dwell", num(s.dwell_s) + " s" + (done ? ", done" : ""), has(ch, "dwell_s")],
+        ["Pickups", num(s.pickups), has(ch, "pickups")]
+      ]);
+    },
+    reader: function (s, ch) {
+      var v = s.values, lo = Infinity, hi = -Infinity;
+      if (v) for (var k = 0; k < v.length; k++) { lo = Math.min(lo, v[k]); hi = Math.max(hi, v[k]); }
+      var grid = plateGrid(function (r, c) { return v ? shade(v[r * 24 + c], lo, hi) : WHITE; },
+        [], has(ch, "values"), v ? "384 values, white is the lowest, black the highest" : "no values yet");
+      return grid + kv([
+        ["Phase", s.phase, has(ch, "phase")],
+        ["Tray", s.tray, has(ch, "tray")],
+        ["Busy", yes(s.busy), has(ch, "busy")],
+        ["Plates read", num(s.plates_read), has(ch, "plates_read")],
+        ["Values", v ? v.length + ", from " + num(lo) + " to " + num(hi) : "none", has(ch, "values")]
+      ]);
+    },
+    lcms: function (s, ch) {
+      var rows = s.rows || [];
+      var h = kv([["Ready", yes(s.ready), has(ch, "ready")]]) +
+        '<div class="tablebox" style="margin-top:12px"><table class="t"><thead><tr><th>Aliquot</th>' +
+        "<th>Started</th><th>Raw file</th></tr></thead><tbody>";
+      for (var k = 0; k < rows.length; k++) {
+        var r = rows[k];
+        h += "<tr" + (has(ch, "rows", k) ? ' class="chg"' : "") + "><td>" + esc(r.aliquot) +
+          "</td><td>" + num(r.started) + '</td><td class="mono">' + esc(r.raw === null ? "-" : r.raw) +
+          "</td></tr>";
+      }
+      return h + "</tbody></table></div>";
+    }
+  };
+
+  /* The drawing of the simulated instrument at step i, as an HTML string. */
+  function drawAt(trace, i) {
+    var cur = stateAt(trace, i) || firstState(trace);
+    if (!cur) return '<p class="none">No state recorded.</p>';
+    var prev = i > 0 ? stateAt(trace, i - 1) : null;
+    var fresh = i > 0 && trace.steps[i].state !== null && trace.steps[i].state !== undefined;
+    var ch = fresh ? changes(prev, cur) : {};
+    return DRAW[trace.station](cur, ch, fresh ? prev : null);
+  }
+
+  return { ORDER: ORDER, CASES: CASES, SPEEDS: SPEEDS, stateAt: stateAt, firstState: firstState, changes: changes,
+    single: single, buildAll: buildAll, total: total, locate: locate, outcomeWord: outcomeWord,
+    rowStatus: rowStatus, parseHash: parseHash, shade: shade, esc: esc, drawAt: drawAt };
+})();
+
+/* Part 2: the page. */
+(function () {
+  "use strict";
+  if (typeof document === "undefined") return;
+  var R = ReplayCore;
+  var DATA = JSON.parse(document.getElementById("r-data").textContent);
+  var ST = {}, k;
+  for (k = 0; k < DATA.stations.length; k++) ST[DATA.stations[k].key] = DATA.stations[k];
+  var CASE_LABEL = { clean: "Clean run", lost_reply: "Reply lost", device_error: "Instrument error" };
+  var ui = { view: "culture", kase: "clean", g: 0, playing: false, speed: "normal", timer: null };
+  var $ = function (id) { return document.getElementById(id); };
+
+  function seq() {
+    return ui.view === "all" ? R.buildAll(DATA.traces, ui.kase) : R.single(DATA.traces, ui.view, ui.kase);
+  }
+
+  var pressed = [];
+
+  /* Buttons are built once, so focus stays where it is; render only updates aria-pressed. */
+  function button(cls, label, isOn, on) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = cls; b.innerHTML = label;
+    b.addEventListener("click", on);
+    pressed.push([b, isOn]);
+    return b;
+  }
+
+  function pickers() {
+    var sp = $("r-stations"), cp = $("r-cases"), sd = $("r-speeds");
+    R.ORDER.concat(["all"]).forEach(function (key, n) {
+      var li = document.createElement("li");
+      var label = key === "all" ? "All 9" :
+        '<span class="n">' + (n + 1) + "</span>" + R.esc(ST[key].name);
+      li.appendChild(button("t", label, function () { return ui.view === key; },
+        function () { go(key); }));
+      sp.appendChild(li);
+    });
+    R.CASES.forEach(function (c) {
+      var li = document.createElement("li");
+      li.appendChild(button("t", CASE_LABEL[c], function () { return ui.kase === c; }, function () {
+        ui.kase = c; stop(); ui.g = 0; render();
+      }));
+      cp.appendChild(li);
+    });
+    ["slow", "normal", "fast"].forEach(function (s) {
+      sd.appendChild(button("c", s.charAt(0).toUpperCase() + s.slice(1),
+        function () { return ui.speed === s; }, function () {
+          ui.speed = s; if (ui.playing) { stop(); play(); } render();
+        }));
+    });
+  }
+
+  function go(view) {
+    select(view);
+    try { if (location.hash !== "#" + view) location.hash = view; } catch (e) { /* no address */ }
+  }
+
+  function select(view) {
+    ui.view = view; stop(); ui.g = 0; render();
+  }
+
+  function about() {
+    if (ui.view === "all") {
+      return "The 9 stations in walk order. Each plays its clean run; the reader plays the run " +
+        "chosen below. The walk stops at the first station that does not complete.";
+    }
+    var s = ST[ui.view];
+    return "<b>" + R.esc(s.status_words) + ".</b> " + R.esc(s.status_line);
+  }
+
+  function render() {
+    for (var p = 0; p < pressed.length; p++) {
+      pressed[p][0].setAttribute("aria-pressed", pressed[p][1]() ? "true" : "false");
+    }
+    var q = seq(), n = R.total(q), at = R.locate(q, ui.g), seg = q.segments[at.seg];
+    var tr = seg.trace, st = ST[seg.key];
+    $("r-about").innerHTML = about();
+    $("r-run").textContent = ui.playing ? "Pause" : "Run";
+    $("r-run").setAttribute("aria-pressed", ui.playing ? "true" : "false");
+    $("r-pos").textContent = "Step " + (ui.g + 1) + " of " + n;
+    var list = $("r-all");
+    list.hidden = ui.view !== "all";
+    if (ui.view === "all") {
+      var rs = R.rowStatus(q, ui.g), h = "";
+      R.ORDER.forEach(function (key, m) {
+        var v = rs[key], bad = v === "hold" || v === "error";
+        h += "<li" + (key === seg.key ? ' class="on"' : "") + '><span class="n">' + (m + 1) +
+          "</span><span>" + R.esc(ST[key].name) + '</span><span class="st' + (bad ? " bad" : "") +
+          '">' + R.esc(v === "completed" ? "completed" : v === "hold" || v === "error" ?
+          R.outcomeWord(v) : v) + "</span></li>";
+      });
+      list.innerHTML = h;
+    }
+    var w = '<p class="head">' + (ui.view === "all" ? "Station " + (R.ORDER.indexOf(seg.key) + 1) +
+      " of 9 / " : "") + R.esc(st.name) + " / " + R.esc(CASE_LABEL[tr.case] || tr.case) + "</p><ol>";
+    for (var i = 0; i <= at.i; i++) {
+      var s = tr.steps[i];
+      w += "<li" + (i === at.i ? ' class="now"' : "") + '><span class="tag">' + R.esc(s.tag) +
+        "</span><code>" + R.esc(s.text) + "</code></li>";
+    }
+    var box = $("r-wire");
+    box.innerHTML = w + "</ol>";
+    box.scrollTop = box.scrollHeight;
+    $("r-inst").innerHTML = '<p class="title">' + R.esc(st.name) + "</p>" + R.drawAt(tr, at.i);
+    var out = $("r-outcome");
+    if (at.last) {
+      var bad = tr.outcome !== "completed";
+      out.innerHTML = '<span class="word' + (bad ? " bad" : "") + '">' + R.esc(R.outcomeWord(tr.outcome)) +
+        '</span><span class="ev">' + (ui.view === "all" ? R.esc(st.name) + ": " : "") +
+        R.esc(tr.evidence) + "</span>";
+    } else {
+      out.innerHTML = "";
+    }
+  }
+
+  function step() {
+    var n = R.total(seq());
+    if (ui.g < n - 1) ui.g++;
+    if (ui.g >= n - 1) stop();
+    render();
+  }
+
+  function play() {
+    if (ui.g >= R.total(seq()) - 1) ui.g = 0;
+    ui.playing = true;
+    ui.timer = setInterval(step, R.SPEEDS[ui.speed]);
+  }
+
+  function stop() {
+    ui.playing = false;
+    if (ui.timer) { clearInterval(ui.timer); ui.timer = null; }
+  }
+
+  function toggle() { if (ui.playing) stop(); else play(); render(); }
+
+  $("r-run").addEventListener("click", toggle);
+  $("r-step").addEventListener("click", function () { stop(); step(); });
+  $("r-reset").addEventListener("click", function () { stop(); ui.g = 0; render(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    var t = e.target && e.target.tagName;
+    if (e.key === " " || e.key === "Spacebar") {
+      if (t === "BUTTON" || t === "A") return;
+      e.preventDefault(); toggle();
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault(); stop(); step();
+    }
+  });
+  window.addEventListener("hashchange", function () {
+    var v = R.parseHash(location.hash);
+    if (v && v !== ui.view) select(v);
+  });
+  ui.view = R.parseHash(location.hash) || "culture";
+  pickers();
+  render();
+})();
+</script>
+</body></html>

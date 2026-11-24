@@ -74,6 +74,7 @@ class SyntheticReader:
     self.fault: Optional[str] = None  # "lost_reply" | "device_error", fires on the next TODO_3
     self.phase = "capture"
     self.executed: Dict[str, Counter] = {}
+    self.last_values: Optional[List[int]] = None  # from the last data reply, until the next frame
 
   def _count(self, name: str) -> None:
     self.executed.setdefault(self.phase, Counter())[name] += 1
@@ -96,6 +97,7 @@ class SyntheticReader:
       raise UnknownFrame(f"not a framed message: {frame.hex()}")
     ftdi_validate_frame(frame, header=SYNTHETIC_HEADER)  # size, CR and checksum (raises)
     payload = ftdi_extract_payload(frame)
+    self.last_values = None
     name = COMMANDS.get(payload)
     if name is None:
       raise UnknownFrame(f"unknown payload {payload.hex()}")
@@ -118,7 +120,10 @@ class SyntheticReader:
       self.fault = None
       logger.info("synthetic reader: plate read, reply dropped (fault lost_reply)")
       return None
-    return wrap(reply(TODO_DATA_ID, 0, FLAG_PLATE, values))
+    out = wrap(reply(TODO_DATA_ID, 0, FLAG_PLATE, values))
+    body = ftdi_extract_payload(out)[4:]  # the values as they stand in the reply frame
+    self.last_values = [int.from_bytes(body[i : i + 2], "big") for i in range(0, len(body), 2)]
+    return out
 
   def state(self) -> str:
     return (

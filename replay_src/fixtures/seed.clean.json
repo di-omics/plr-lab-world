@@ -1,0 +1,330 @@
+{
+ "station": "seed",
+ "name": "Agilent BioTek EL406",
+ "case": "clean",
+ "outcome": "completed",
+ "evidence": "fixture: 24/24 columns at 40 uL/well",
+ "simulated": true,
+ "steps": [
+  {
+   "i": 0,
+   "tag": "state",
+   "text": "start: seed",
+   "state": {
+    "plate": null,
+    "batch_open": false,
+    "pump": null,
+    "prime_uL": 0,
+    "columns_uL": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "error": "0x0000"
+   }
+  },
+  {
+   "i": 1,
+   "tag": "ask",
+   "text": "open a batch for the 384-well plate",
+   "state": null
+  },
+  {
+   "i": 2,
+   "tag": "send",
+   "text": "01 02 8d 00 01 00 00 01 00 6d ff 01",
+   "state": null
+  },
+  {
+   "i": 3,
+   "tag": "recv",
+   "text": "06 01 02 8d 00 01 00 00 00 00 6f ff",
+   "state": null
+  },
+  {
+   "i": 4,
+   "tag": "state",
+   "text": "plate 384 std, batch open",
+   "state": {
+    "plate": "384 std",
+    "batch_open": true,
+    "pump": "peristaltic",
+    "prime_uL": 0,
+    "columns_uL": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "error": "0x0000"
+   }
+  },
+  {
+   "i": 5,
+   "tag": "ask",
+   "text": "prime the peristaltic lines, 500 uL",
+   "state": null
+  },
+  {
+   "i": 6,
+   "tag": "send",
+   "text": "01 02 90 00 01 00 00 0b 00 67 fe 01 f4 01 00 00 02 01 00 01 00 00",
+   "state": null
+  },
+  {
+   "i": 7,
+   "tag": "state",
+   "text": "prime 500 uL",
+   "state": {
+    "plate": "384 std",
+    "batch_open": true,
+    "pump": "peristaltic",
+    "prime_uL": 500,
+    "columns_uL": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "error": "0x0000"
+   }
+  },
+  {
+   "i": 8,
+   "tag": "ask",
+   "text": "dispense 40 uL per well, columns 1-24",
+   "state": null
+  },
+  {
+   "i": 9,
+   "tag": "send",
+   "text": "01 02 8f 00 01 00 00 18 00 d2 fb 01 28 00 02 00 00 00 4d 01 0a 00 02 ff ff ff 00 00 00 00 00 00 00 00",
+   "state": null
+  },
+  {
+   "i": 10,
+   "tag": "state",
+   "text": "8 of 24 columns at 40 uL",
+   "state": {
+    "plate": "384 std",
+    "batch_open": true,
+    "pump": "peristaltic",
+    "prime_uL": 500,
+    "columns_uL": [
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "error": "0x0000"
+   }
+  },
+  {
+   "i": 11,
+   "tag": "state",
+   "text": "16 of 24 columns at 40 uL",
+   "state": {
+    "plate": "384 std",
+    "batch_open": true,
+    "pump": "peristaltic",
+    "prime_uL": 500,
+    "columns_uL": [
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "error": "0x0000"
+   }
+  },
+  {
+   "i": 12,
+   "tag": "state",
+   "text": "24 of 24 columns at 40 uL",
+   "state": {
+    "plate": "384 std",
+    "batch_open": true,
+    "pump": "peristaltic",
+    "prime_uL": 500,
+    "columns_uL": [
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "error": "0x0000"
+   }
+  },
+  {
+   "i": 13,
+   "tag": "recv",
+   "text": "06 01 02 92 00 01 00 00 09 00 60 ff 00 00 01 00 00 00 00 00 00",
+   "state": null
+  },
+  {
+   "i": 14,
+   "tag": "state",
+   "text": "batch closed",
+   "state": {
+    "plate": "384 std",
+    "batch_open": false,
+    "pump": "peristaltic",
+    "prime_uL": 500,
+    "columns_uL": [
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40,
+     40
+    ],
+    "error": "0x0000"
+   }
+  },
+  {
+   "i": 15,
+   "tag": "done",
+   "text": "completed: fixture: 24/24 columns at 40 uL/well",
+   "state": null
+  }
+ ]
+}

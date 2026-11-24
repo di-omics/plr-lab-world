@@ -1,0 +1,68 @@
+{
+ "station": "hotel",
+ "name": "Passive plate hotel",
+ "case": "device_error",
+ "outcome": "error",
+ "evidence": "fixture: place refused at slot 5",
+ "simulated": true,
+ "steps": [
+  {
+   "i": 0,
+   "tag": "state",
+   "text": "start: hotel",
+   "state": {
+    "slots": 24,
+    "occupied": [
+     2,
+     3
+    ],
+    "reserved": [],
+    "clock_s": 0,
+    "dwell_s": 600,
+    "pickups": 0
+   }
+  },
+  {
+   "i": 1,
+   "tag": "ask",
+   "text": "reserve slot 5, place, dwell 600 s, pick up",
+   "state": null
+  },
+  {
+   "i": 2,
+   "tag": "state",
+   "text": "slot 5 reserved",
+   "state": {
+    "slots": 24,
+    "occupied": [
+     2,
+     3
+    ],
+    "reserved": [
+     5
+    ],
+    "clock_s": 0,
+    "dwell_s": 600,
+    "pickups": 0
+   }
+  },
+  {
+   "i": 3,
+   "tag": "send",
+   "text": "place slot=5 plate=assay_plate_1",
+   "state": null
+  },
+  {
+   "i": 4,
+   "tag": "recv",
+   "text": "place refused slot=5: occupied by sensor",
+   "state": null
+  },
+  {
+   "i": 5,
+   "tag": "done",
+   "text": "error: fixture: place refused at slot 5",
+   "state": null
+  }
+ ]
+}

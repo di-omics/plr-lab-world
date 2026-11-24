@@ -10,7 +10,7 @@ import logging
 import os
 import re
 from collections import Counter
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,7 @@ class SimulatedWorkstation:
     self.fault_text = ""
     self.started: Counter = Counter()  # Start pulses acted on, per aliquot
     self.files: List[str] = []
+    self.raw: Dict[str, str] = {}  # aliquot -> raw file name written for it
 
   def load_sequence(self, aliquots: List[str]) -> None:
     """The operator loads the sequence in the vendor software (simulated)."""
@@ -79,6 +80,13 @@ class SimulatedWorkstation:
     with open(os.path.join(self.raw_dir, name), "w", encoding="ascii") as fh:
       fh.write(f"SIMULATED raw-file stub\nrow {self.next_row}\naliquot {aliquot}\n")
     self.files.append(name)
+    self.raw[aliquot] = name
+
+  def snapshot(self) -> dict:
+    """Workstation state for a replay: Ready, and per sequence row its starts and raw file."""
+    return {"ready": self.ready,
+            "rows": [{"aliquot": a, "started": self.started[a], "raw": self.raw.get(a)}
+                     for a in self.sequence]}
 
   def state(self) -> str:
     return (

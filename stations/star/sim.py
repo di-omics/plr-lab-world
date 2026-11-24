@@ -80,6 +80,16 @@ class SimulatedSTARlet(IOBase):
     self.volume = {name: 0.0 for name in wells} | volumes
     self.tips_in_rack = set(tip_spots)
 
+  def snapshot(self) -> dict:
+    """Device state for a replay: tips and liquid per channel, column 1 of both plates."""
+    r1 = lambda v: round(float(v), 1) + 0.0  # noqa: E731  (+ 0.0 turns -0.0 into 0.0)
+    col = lambda plate: [r1(self.volume.get(f"{plate}:{r}1", 0.0)) for r in "ABCDEFGH"]  # noqa
+    return {"initialized": self.initialized,
+            "tips_on_channel": [t is not None for t in self.tip_on],
+            "tip_uL": [r1(v) for v in self.liquid],
+            "source_uL": col("source"), "dest_uL": col("destination"),
+            "tips_in_rack": len(self.tips_in_rack)}
+
   # -- the transport, as pylabrobot.io.usb.USB offers it ---------------------------------------
 
   async def setup(self, *args, **kwargs) -> None:

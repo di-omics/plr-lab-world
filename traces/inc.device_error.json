@@ -1,0 +1,84 @@
+{
+ "case": "device_error",
+ "evidence": "DM200=00103 LiconicHandlerImportPlateError: Lift did not reach upper pick position at transfer level during Import Plate procedure.",
+ "name": "LiCONiC STX44 incubator",
+ "outcome": "error",
+ "simulated": true,
+ "station": "inc",
+ "steps": [
+  {
+   "i": 0,
+   "state": {
+    "cassette": null,
+    "error": "",
+    "plate_at": "transfer",
+    "position": null,
+    "ready": true,
+    "temp_c": 37.0
+   },
+   "tag": "ask",
+   "text": "set up: break, CR handshake, activate handling, wait ready"
+  },
+  {
+   "i": 1,
+   "state": null,
+   "tag": "send",
+   "text": "CR | ST 1801 | RD 1915"
+  },
+  {
+   "i": 2,
+   "state": null,
+   "tag": "recv",
+   "text": "CC | OK | 1"
+  },
+  {
+   "i": 3,
+   "state": null,
+   "tag": "state",
+   "text": "plate at transfer, ready 1, error 00000, temp 37.0 deg C"
+  },
+  {
+   "i": 4,
+   "state": null,
+   "tag": "ask",
+   "text": "take the plate in from the transfer station to cassette 1, position 1"
+  },
+  {
+   "i": 5,
+   "state": {
+    "cassette": null,
+    "error": "00103",
+    "plate_at": "shovel",
+    "position": null,
+    "ready": false,
+    "temp_c": 37.0
+   },
+   "tag": "send",
+   "text": "WR DM0 1 | WR DM23 788 | WR DM25 22 | WR DM5 1 | ST 1904 | RD 1915 x600 | RD 1814 | RD DM200"
+  },
+  {
+   "i": 6,
+   "state": null,
+   "tag": "recv",
+   "text": "OK x5 | 0 x600 | 1 | 00103"
+  },
+  {
+   "i": 7,
+   "state": null,
+   "tag": "state",
+   "text": "plate at shovel, ready 0, error 00103, temp 37.0 deg C"
+  },
+  {
+   "i": 8,
+   "state": null,
+   "tag": "state",
+   "text": "upstream warning: Liconic racks need to be configured manually on each setup"
+  },
+  {
+   "i": 9,
+   "state": null,
+   "tag": "done",
+   "text": "error: DM200=00103 LiconicHandlerImportPlateError: Lift did not reach upper pick position at t"
+  }
+ ]
+}

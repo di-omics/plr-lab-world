@@ -1,0 +1,140 @@
+{
+ "station": "rail",
+ "name": "Rail-mounted transfer arm (linear track)",
+ "case": "device_error",
+ "outcome": "error",
+ "evidence": "fixture: error register 21 at 210 mm",
+ "simulated": true,
+ "steps": [
+  {
+   "i": 0,
+   "tag": "state",
+   "text": "start: rail",
+   "state": {
+    "pos_mm": 0,
+    "target_mm": null,
+    "travel_mm": 700,
+    "enabled": false,
+    "homed": false,
+    "error": 0,
+    "moves": 0
+   }
+  },
+  {
+   "i": 1,
+   "tag": "ask",
+   "text": "setup, home, move to 450 mm at 200 mm/s, stop",
+   "state": null
+  },
+  {
+   "i": 2,
+   "tag": "send",
+   "text": "set_linear_motor_enable(True)",
+   "state": null
+  },
+  {
+   "i": 3,
+   "tag": "recv",
+   "text": "0",
+   "state": null
+  },
+  {
+   "i": 4,
+   "tag": "state",
+   "text": "enabled",
+   "state": {
+    "pos_mm": 0,
+    "target_mm": null,
+    "travel_mm": 700,
+    "enabled": true,
+    "homed": false,
+    "error": 0,
+    "moves": 0
+   }
+  },
+  {
+   "i": 5,
+   "tag": "send",
+   "text": "set_linear_motor_back_origin(wait=False,auto_enable=True)",
+   "state": null
+  },
+  {
+   "i": 6,
+   "tag": "recv",
+   "text": "0",
+   "state": null
+  },
+  {
+   "i": 7,
+   "tag": "state",
+   "text": "homed",
+   "state": {
+    "pos_mm": 0,
+    "target_mm": null,
+    "travel_mm": 700,
+    "enabled": true,
+    "homed": true,
+    "error": 0,
+    "moves": 0
+   }
+  },
+  {
+   "i": 8,
+   "tag": "send",
+   "text": "set_linear_motor_pos(450,speed=200,wait=False)",
+   "state": null
+  },
+  {
+   "i": 9,
+   "tag": "state",
+   "text": "target 450 mm",
+   "state": {
+    "pos_mm": 0,
+    "target_mm": 450,
+    "travel_mm": 700,
+    "enabled": true,
+    "homed": true,
+    "error": 0,
+    "moves": 0
+   }
+  },
+  {
+   "i": 10,
+   "tag": "recv",
+   "text": "0",
+   "state": null
+  },
+  {
+   "i": 11,
+   "tag": "state",
+   "text": "stopped at 210 mm, error 21",
+   "state": {
+    "pos_mm": 210,
+    "target_mm": 450,
+    "travel_mm": 700,
+    "enabled": true,
+    "homed": true,
+    "error": 21,
+    "moves": 0
+   }
+  },
+  {
+   "i": 12,
+   "tag": "send",
+   "text": "get_linear_motor_error()",
+   "state": null
+  },
+  {
+   "i": 13,
+   "tag": "recv",
+   "text": "(0, 21)",
+   "state": null
+  },
+  {
+   "i": 14,
+   "tag": "done",
+   "text": "error: fixture: error register 21 at 210 mm",
+   "state": null
+  }
+ ]
+}

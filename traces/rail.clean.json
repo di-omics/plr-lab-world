@@ -1,0 +1,200 @@
+{
+ "case": "clean",
+ "evidence": "position report 450 mm == taught 450 mm, error register 0",
+ "name": "Rail-mounted transfer arm (linear track)",
+ "outcome": "completed",
+ "simulated": true,
+ "station": "rail",
+ "steps": [
+  {
+   "i": 0,
+   "state": {
+    "enabled": false,
+    "error": 0,
+    "homed": false,
+    "moves": 0,
+    "pos_mm": 0.0,
+    "target_mm": null,
+    "travel_mm": 700.0
+   },
+   "tag": "ask",
+   "text": "setup, home, move to 450 mm at 200 mm/s, stop"
+  },
+  {
+   "i": 1,
+   "state": null,
+   "tag": "send",
+   "text": "get_linear_motor_is_enabled()"
+  },
+  {
+   "i": 2,
+   "state": null,
+   "tag": "recv",
+   "text": "(0, 0)"
+  },
+  {
+   "i": 3,
+   "state": null,
+   "tag": "send",
+   "text": "set_linear_motor_enable(True)"
+  },
+  {
+   "i": 4,
+   "state": {
+    "enabled": true,
+    "error": 0,
+    "homed": false,
+    "moves": 0,
+    "pos_mm": 0.0,
+    "target_mm": null,
+    "travel_mm": 700.0
+   },
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 5,
+   "state": null,
+   "tag": "send",
+   "text": "get_linear_motor_on_zero()"
+  },
+  {
+   "i": 6,
+   "state": null,
+   "tag": "recv",
+   "text": "(0, 0)"
+  },
+  {
+   "i": 7,
+   "state": null,
+   "tag": "send",
+   "text": "set_linear_motor_back_origin(wait=False,auto_enable=True)"
+  },
+  {
+   "i": 8,
+   "state": {
+    "enabled": true,
+    "error": 0,
+    "homed": true,
+    "moves": 0,
+    "pos_mm": 0.0,
+    "target_mm": null,
+    "travel_mm": 700.0
+   },
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 9,
+   "state": null,
+   "tag": "send",
+   "text": "get_linear_motor_on_zero()"
+  },
+  {
+   "i": 10,
+   "state": null,
+   "tag": "recv",
+   "text": "(0, 1)"
+  },
+  {
+   "i": 11,
+   "state": null,
+   "tag": "send",
+   "text": "get_linear_motor_pos()"
+  },
+  {
+   "i": 12,
+   "state": null,
+   "tag": "recv",
+   "text": "(0, 0)"
+  },
+  {
+   "i": 13,
+   "state": null,
+   "tag": "send",
+   "text": "set_linear_motor_pos(450,speed=200,wait=False)"
+  },
+  {
+   "i": 14,
+   "state": {
+    "enabled": true,
+    "error": 0,
+    "homed": true,
+    "moves": 1,
+    "pos_mm": 450.0,
+    "target_mm": 450.0,
+    "travel_mm": 700.0
+   },
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 15,
+   "state": null,
+   "tag": "send",
+   "text": "get_linear_motor_error()"
+  },
+  {
+   "i": 16,
+   "state": null,
+   "tag": "recv",
+   "text": "(0, 0)"
+  },
+  {
+   "i": 17,
+   "state": null,
+   "tag": "send",
+   "text": "get_linear_motor_status()"
+  },
+  {
+   "i": 18,
+   "state": null,
+   "tag": "recv",
+   "text": "(0, 0)"
+  },
+  {
+   "i": 19,
+   "state": null,
+   "tag": "send",
+   "text": "get_linear_motor_pos()"
+  },
+  {
+   "i": 20,
+   "state": null,
+   "tag": "recv",
+   "text": "(0, 450)"
+  },
+  {
+   "i": 21,
+   "state": null,
+   "tag": "send",
+   "text": "set_linear_motor_enable(False)"
+  },
+  {
+   "i": 22,
+   "state": {
+    "enabled": false,
+    "error": 0,
+    "homed": true,
+    "moves": 1,
+    "pos_mm": 450.0,
+    "target_mm": 450.0,
+    "travel_mm": 700.0
+   },
+   "tag": "recv",
+   "text": "0"
+  },
+  {
+   "i": 23,
+   "state": null,
+   "tag": "state",
+   "text": "pos 450 mm, enabled 0, on_zero 1, error 0, moves 1"
+  },
+  {
+   "i": 24,
+   "state": null,
+   "tag": "done",
+   "text": "completed: position report 450 mm == taught 450 mm, error register 0"
+  }
+ ]
+}

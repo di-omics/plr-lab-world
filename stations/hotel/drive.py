@@ -31,6 +31,7 @@ class Scheduler:
   def __init__(self, hotel: PlateCarrier, sim: SimHotel, clock: SimClock) -> None:
     self.hotel, self.sim, self.clock = hotel, sim, clock
     self.slots: Dict[int, dict] = {}  # slot -> {"plate", "state", "placed_at"}
+    sim.scheduler = self  # so a replay can read the reservations next to the shelves
 
   def reserve(self, slot: int, plate: str) -> None:
     if slot in self.slots:
@@ -56,9 +57,26 @@ class Scheduler:
     return True
 
 
-async def run(fault: Optional[str] = None, log: Callable[[str], None] = print) -> dict:
-  """Run the example once, in simulation only."""
+class HotelState:
+  """What a replay watches: the shelves (sim), the clock and the scheduler's reservations."""
+
+  def __init__(self, sim: SimHotel, clock: SimClock) -> None:
+    self.sim, self.clock = sim, clock
+
+  def snapshot(self) -> dict:
+    sched = self.sim.scheduler
+    return {"slots": SLOTS, "occupied": [i for i, p in enumerate(self.sim.shelves) if p],
+            "reserved": sorted(sched.slots) if sched else [],
+            "clock_s": round(float(self.clock.now_s), 1), "dwell_s": round(float(DWELL_S), 1),
+            "pickups": self.sim.pickups}
+
+
+async def run(fault: Optional[str] = None, log: Callable[[str], None] = print,
+              watch: Optional[Callable[[object], None]] = None) -> dict:
+  """Run the example once, in simulation only. watch(state) sees the hotel state once, first."""
   clock, sim, hotel = SimClock(), SimHotel(fault), build_hotel()
+  if watch is not None:
+    watch(HotelState(sim, clock))
   sim.log = log
   out = {"station": STATION, "sim": sim, "hotel": hotel}
   if fault == "device_error":  # a plate already recorded on shelf 5, outside the scheduler

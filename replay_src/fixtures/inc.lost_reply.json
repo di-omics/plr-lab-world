@@ -1,0 +1,73 @@
+{
+ "station": "inc",
+ "name": "LiCONiC STX44 incubator",
+ "case": "lost_reply",
+ "outcome": "hold",
+ "evidence": "fixture: plate stored, reply lost, not sent again",
+ "simulated": true,
+ "steps": [
+  {
+   "i": 0,
+   "tag": "state",
+   "text": "start: inc",
+   "state": {
+    "plate_at": "transfer",
+    "cassette": null,
+    "position": null,
+    "ready": true,
+    "error": "00000",
+    "temp_c": 37.0
+   }
+  },
+  {
+   "i": 1,
+   "tag": "ask",
+   "text": "take the plate in from the transfer station to cassette 1, position 1",
+   "state": null
+  },
+  {
+   "i": 2,
+   "tag": "send",
+   "text": "WR DM0 1 | WR DM23 788 | WR DM25 22 | WR DM5 1 | ST 1904",
+   "state": null
+  },
+  {
+   "i": 3,
+   "tag": "state",
+   "text": "plate on the shovel",
+   "state": {
+    "plate_at": "shovel",
+    "cassette": null,
+    "position": null,
+    "ready": false,
+    "error": "00000",
+    "temp_c": 37.0
+   }
+  },
+  {
+   "i": 4,
+   "tag": "state",
+   "text": "plate at cassette 1/1",
+   "state": {
+    "plate_at": "cassette",
+    "cassette": 1,
+    "position": 1,
+    "ready": false,
+    "error": "00000",
+    "temp_c": 37.0
+   }
+  },
+  {
+   "i": 5,
+   "tag": "recv",
+   "text": "(no reply)",
+   "state": null
+  },
+  {
+   "i": 6,
+   "tag": "done",
+   "text": "hold: fixture: plate stored, reply lost, not sent again",
+   "state": null
+  }
+ ]
+}

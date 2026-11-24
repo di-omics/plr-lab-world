@@ -1,0 +1,62 @@
+{
+ "station": "culture",
+ "name": "Tissue-culture station",
+ "case": "clean",
+ "outcome": "completed",
+ "evidence": "fixture: CB-0001 released, worklist WL-7 matches",
+ "simulated": true,
+ "steps": [
+  {
+   "i": 0,
+   "tag": "state",
+   "text": "start: culture",
+   "state": {
+    "released": {},
+    "executed": 0,
+    "known_batches": [
+     "CB-0001",
+     "CB-0002"
+    ]
+   }
+  },
+  {
+   "i": 1,
+   "tag": "ask",
+   "text": "release CB-0001 for seeding against worklist WL-7",
+   "state": null
+  },
+  {
+   "i": 2,
+   "tag": "send",
+   "text": "{\"op\": \"release\", \"batch\": \"CB-0001\", \"worklist\": \"WL-7\"}",
+   "state": null
+  },
+  {
+   "i": 3,
+   "tag": "state",
+   "text": "released CB-0001 -> WL-7, executed 1",
+   "state": {
+    "released": {
+     "CB-0001": "WL-7"
+    },
+    "executed": 1,
+    "known_batches": [
+     "CB-0001",
+     "CB-0002"
+    ]
+   }
+  },
+  {
+   "i": 4,
+   "tag": "recv",
+   "text": "{\"ok\": true, \"batch\": \"CB-0001\"}",
+   "state": null
+  },
+  {
+   "i": 5,
+   "tag": "done",
+   "text": "completed: fixture: CB-0001 released, worklist WL-7 matches",
+   "state": null
+  }
+ ]
+}

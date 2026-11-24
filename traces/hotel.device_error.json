@@ -1,0 +1,48 @@
+{
+ "case": "device_error",
+ "evidence": "ValueError: spot 5 already has a resource",
+ "name": "Passive plate hotel",
+ "outcome": "error",
+ "simulated": true,
+ "station": "hotel",
+ "steps": [
+  {
+   "i": 0,
+   "state": {
+    "clock_s": 0.0,
+    "dwell_s": 600.0,
+    "occupied": [
+     5
+    ],
+    "pickups": 0,
+    "reserved": [],
+    "slots": 24
+   },
+   "tag": "ask",
+   "text": "reserve slot 5, place, dwell 600 s, pick up"
+  },
+  {
+   "i": 1,
+   "state": {
+    "clock_s": 0.0,
+    "dwell_s": 600.0,
+    "occupied": [
+     5
+    ],
+    "pickups": 0,
+    "reserved": [
+     5
+    ],
+    "slots": 24
+   },
+   "tag": "state",
+   "text": "model slot 5: earlier_plate; shelf 5: earlier_plate; reserved: [5]"
+  },
+  {
+   "i": 2,
+   "state": null,
+   "tag": "done",
+   "text": "error: ValueError: spot 5 already has a resource"
+  }
+ ]
+}

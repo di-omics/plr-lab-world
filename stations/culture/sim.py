@@ -22,6 +22,11 @@ class SimCultureStation:
     self.fault = fault
     self.log: Optional[Callable[[str], None]] = None
 
+  def snapshot(self) -> dict:
+    """Station state for a replay: releases carried out and the batches it knows."""
+    return {"released": dict(self.released), "executed": self.releases_executed,
+            "known_batches": sorted(self.known)}
+
   def handle(self, line: str) -> Optional[str]:
     """Take 1 message; return the reply line, or None when the reply is lost."""
     if self.log:

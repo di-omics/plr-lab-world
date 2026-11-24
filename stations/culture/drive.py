@@ -43,9 +43,12 @@ class CultureAdapter:
     self.records.append({"batch": batch, "worklist": worklist_id})
 
 
-async def run(fault: Optional[str] = None, log: Callable[[str], None] = print) -> dict:
-  """Run the example once, in simulation only."""
+async def run(fault: Optional[str] = None, log: Callable[[str], None] = print,
+              watch: Optional[Callable[[object], None]] = None) -> dict:
+  """Run the example once, in simulation only. watch(sim) sees the simulator once, first."""
   station = SimCultureStation(batches=["CB-0001"], fault=fault)
+  if watch is not None:
+    watch(station)
   station.log = log
   out = {"station": STATION, "sim": station}
 # --8<-- snippet

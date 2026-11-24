@@ -29,6 +29,19 @@ def hexs(data: bytes, keep: int = 24) -> str:
   return s + (f" ... ({len(data)} bytes)" if len(data) > keep else "")
 
 
+class ReaderState:
+  """What a replay watches: the synthetic reader plus which part (a) to (d) is running."""
+
+  def __init__(self, sim: SyntheticReader) -> None:
+    self.sim, self.phase = sim, "capture"
+
+  def snapshot(self) -> dict:
+    s = self.sim
+    return {"phase": self.phase, "tray": "out" if s.tray_out else "in", "busy": s.busy,
+            "plates_read": s.plates_read,
+            "values": None if s.last_values is None else list(s.last_values)}
+
+
 def split_frames(stream: bytes) -> list:
   """Not in plr_re (decode.py has diff, Modbus and HAR only): test the sibling framing by
   cutting the stream at each size field and checking it with upstream's validator."""
@@ -42,9 +55,12 @@ def split_frames(stream: bytes) -> list:
   return frames
 
 
-async def run(fault: str | None = None, log=print) -> dict:
-  """Run the example once, in simulation only."""
+async def run(fault: str | None = None, log=print, watch=None) -> dict:
+  """Run the example once, in simulation only. watch(state) sees the reader state once, first."""
   sim, tick = SyntheticReader(), iter(range(1, 10_000))
+  view = ReaderState(sim)
+  if watch is not None:
+    watch(view)
   tap = lambda tag, data: log(f"{tag:<6}{hexs(data)}")  # noqa: E731
   with tempfile.TemporaryDirectory() as tmp:
     host, rdr = os.path.join(tmp, "host.jsonl"), os.path.join(tmp, "reader.jsonl")
@@ -59,6 +75,7 @@ async def run(fault: str | None = None, log=print) -> dict:
         log(f"state captured {action}: {' + '.join(used)}; {sim.state()}")
     finally:
       capture.time = real_time
+    view.phase = "decode"
     log("ask   (b) decode: framing, then group frames by action mark")
     stream = load_serial_log(host)
     frames = split_frames(stream)
@@ -81,6 +98,7 @@ async def run(fault: str | None = None, log=print) -> dict:
       pm.commands[name] = Command(name=name, frame_template=frame.hex(), decoded=True,
                                   actuating=name != "TODO_4", notes="meaning = its mark only")
     log(f"state protocol map coverage {pm.coverage()['decoded']}/{pm.coverage()['total']}")
+    view.phase = "replay"
     log("ask   (c) replay TODO_3 (read) behind plr_re guards: armed, actuation allowed (sim)")
     sim.phase, conn = "replay", SimByteConn(sim, tap)
     replayer = GuardedReplayer(pm, Guards(armed=True, allow_actuation=True), conn=conn)
@@ -90,6 +108,7 @@ async def run(fault: str | None = None, log=print) -> dict:
       frame += conn.read()
     ftdi_validate_frame(frame, header=frame[3])
     log(f"state replay: {(len(ftdi_extract_payload(frame)) - 4) // 2} values back; {sim.state()}")
+    view.phase = "draft"
     log("ask   (d) the same read through the draft driver class")
     sim.phase, sim.fault = "driver", fault
     transport = SimTransport(sim, tap)

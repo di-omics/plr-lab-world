@@ -67,6 +67,12 @@ class SimXArmAPI:
       raise AttributeError(name)
     raise SimUnknownCall(f"unknown SDK call {name}")
 
+  def snapshot(self) -> dict:
+    """Arm state for a replay: tool position in mm, jaw opening, where the plate is."""
+    return {"pose": [round(float(v), 1) + 0.0 for v in self.pose[:3]],
+            "jaw_units": self.jaw_units, "jaw_max": UNITS_MAX, "plate_at": self.plate_at,
+            "error_code": self.error_code}
+
   def release_hung(self) -> None:
     self._hung.set()
 

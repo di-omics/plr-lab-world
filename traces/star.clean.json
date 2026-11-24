@@ -1,0 +1,388 @@
+{
+ "case": "clean",
+ "evidence": "destination col 1: [55.1] uL each (50 uL asked + liquid class); 96 tips in rack",
+ "name": "Hamilton Microlab STAR",
+ "outcome": "completed",
+ "simulated": true,
+ "station": "star",
+ "steps": [
+  {
+   "i": 0,
+   "state": {
+    "dest_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "initialized": false,
+    "source_uL": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "tip_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tips_in_rack": 96,
+    "tips_on_channel": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   "tag": "ask",
+   "text": "set up; 8 tips; 50 uL from source col 1 to destination col 1; return tips"
+  },
+  {
+   "i": 1,
+   "state": null,
+   "tag": "send",
+   "text": "C0RMid0001"
+  },
+  {
+   "i": 2,
+   "state": null,
+   "tag": "recv",
+   "text": "C0RMid0001er00/00kb01kp08"
+  },
+  {
+   "i": 3,
+   "state": null,
+   "tag": "send",
+   "text": "C0VIid0034"
+  },
+  {
+   "i": 4,
+   "state": {
+    "dest_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "initialized": true,
+    "source_uL": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "tip_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tips_in_rack": 96,
+    "tips_on_channel": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   "tag": "recv",
+   "text": "C0VIid0034er00/00"
+  },
+  {
+   "i": 5,
+   "state": null,
+   "tag": "send",
+   "text": "C0DIid0036xp08000&yp4050 3783 3516 3249 2982 2715 2448 2181tp2450tz1220te3600tm1 1 1 1 1 1 ..."
+  },
+  {
+   "i": 6,
+   "state": null,
+   "tag": "recv",
+   "text": "C0DIid0036er00/00"
+  },
+  {
+   "i": 7,
+   "state": null,
+   "tag": "send",
+   "text": "C0TPid0117xp01179 01179 01179 01179 01179 01179 01179 01179yp1458 1368 1278 1188 1098 1008 ..."
+  },
+  {
+   "i": 8,
+   "state": {
+    "dest_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "initialized": true,
+    "source_uL": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "tip_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tips_in_rack": 88,
+    "tips_on_channel": [
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ]
+   },
+   "tag": "state",
+   "text": "tips on 8 of 8 channels"
+  },
+  {
+   "i": 9,
+   "state": null,
+   "tag": "recv",
+   "text": "C0TPid0117er00/00"
+  },
+  {
+   "i": 10,
+   "state": null,
+   "tag": "send",
+   "text": "C0ASid0176at0 0 0 0 0 0 0 0tm1 1 1 1 1 1 1 1xp02758 02758 02758 02758 02758 02758 02758 027..."
+  },
+  {
+   "i": 11,
+   "state": {
+    "dest_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "initialized": true,
+    "source_uL": [
+     44.9,
+     44.9,
+     44.9,
+     44.9,
+     44.9,
+     44.9,
+     44.9,
+     44.9
+    ],
+    "tip_uL": [
+     55.1,
+     55.1,
+     55.1,
+     55.1,
+     55.1,
+     55.1,
+     55.1,
+     55.1
+    ],
+    "tips_in_rack": 88,
+    "tips_on_channel": [
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ]
+   },
+   "tag": "state",
+   "text": "left in source wells: [44.9] uL each; tips hold [55.1] uL each"
+  },
+  {
+   "i": 12,
+   "state": null,
+   "tag": "recv",
+   "text": "C0ASid0176er00/00"
+  },
+  {
+   "i": 13,
+   "state": null,
+   "tag": "send",
+   "text": "C0DSid0227dm2 2 2 2 2 2 2 2tm1 1 1 1 1 1 1 1xp02758 02758 02758 02758 02758 02758 02758 027..."
+  },
+  {
+   "i": 14,
+   "state": {
+    "dest_uL": [
+     55.1,
+     55.1,
+     55.1,
+     55.1,
+     55.1,
+     55.1,
+     55.1,
+     55.1
+    ],
+    "initialized": true,
+    "source_uL": [
+     44.9,
+     44.9,
+     44.9,
+     44.9,
+     44.9,
+     44.9,
+     44.9,
+     44.9
+    ],
+    "tip_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tips_in_rack": 88,
+    "tips_on_channel": [
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ]
+   },
+   "tag": "state",
+   "text": "now in destination wells: [55.1] uL each; tips hold [0.0] uL each"
+  },
+  {
+   "i": 15,
+   "state": null,
+   "tag": "recv",
+   "text": "C0DSid0227er00/00"
+  },
+  {
+   "i": 16,
+   "state": null,
+   "tag": "send",
+   "text": "C0TRid0238xp01179 01179 01179 01179 01179 01179 01179 01179yp1458 1368 1278 1188 1098 1008 ..."
+  },
+  {
+   "i": 17,
+   "state": {
+    "dest_uL": [
+     55.1,
+     55.1,
+     55.1,
+     55.1,
+     55.1,
+     55.1,
+     55.1,
+     55.1
+    ],
+    "initialized": true,
+    "source_uL": [
+     44.9,
+     44.9,
+     44.9,
+     44.9,
+     44.9,
+     44.9,
+     44.9,
+     44.9
+    ],
+    "tip_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tips_in_rack": 96,
+    "tips_on_channel": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   "tag": "state",
+   "text": "tips on 0 of 8 channels, 96 in the rack"
+  },
+  {
+   "i": 18,
+   "state": null,
+   "tag": "recv",
+   "text": "C0TRid0238er00/00"
+  },
+  {
+   "i": 19,
+   "state": null,
+   "tag": "done",
+   "text": "completed: destination col 1: [55.1] uL each (50 uL asked + liquid class); 96 tips in rack"
+  }
+ ]
+}

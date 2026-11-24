@@ -46,10 +46,13 @@ def _sdk_module(sim: SimXArmAPI) -> dict:
   return {"xarm": xarm, "xarm.wrapper": wrapper}
 
 
-async def run(fault: Optional[str] = None, log: Callable[[str], None] = print) -> dict:
-  """Run the example once, in simulation only."""
+async def run(fault: Optional[str] = None, log: Callable[[str], None] = print,
+              watch: Optional[Callable[[object], None]] = None) -> dict:
+  """Run the example once, in simulation only. watch(sim) sees the simulator once, first."""
   nests = {"hotel": (HOTEL.x, HOTEL.y, HOTEL.z), "reader": (READER.x, READER.y, READER.z)}
   sim = SimXArmAPI(nests, plate_at="hotel", fault=fault, fault_pose=nests["reader"])
+  if watch is not None:
+    watch(sim)
   out = {"station": STATION, "sim": sim}
   arm = XArm6(ip="192.168.1.220")  # made-up address, never contacted
   try:

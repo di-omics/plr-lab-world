@@ -1,0 +1,520 @@
+{
+ "case": "clean",
+ "evidence": "8/8 injections matched to a raw file",
+ "name": "Shared LC-MS bench",
+ "outcome": "completed",
+ "simulated": true,
+ "station": "lcms",
+ "steps": [
+  {
+   "i": 0,
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "raw": null,
+      "started": 0
+     }
+    ]
+   },
+   "tag": "ask",
+   "text": "run sequence.csv: 8 injections from PLATE01, 1 start each"
+  },
+  {
+   "i": 1,
+   "state": null,
+   "tag": "send",
+   "text": "[dry-run] would pulse START on BCM27 for 0.25s"
+  },
+  {
+   "i": 2,
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "raw": "001_PLATE01-A1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "raw": null,
+      "started": 0
+     }
+    ]
+   },
+   "tag": "recv",
+   "text": "001_PLATE01-A1.raw.stub"
+  },
+  {
+   "i": 3,
+   "state": null,
+   "tag": "send",
+   "text": "[dry-run] would pulse START on BCM27 for 0.25s"
+  },
+  {
+   "i": 4,
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "raw": "001_PLATE01-A1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "raw": "002_PLATE01-B1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "raw": null,
+      "started": 0
+     }
+    ]
+   },
+   "tag": "recv",
+   "text": "002_PLATE01-B1.raw.stub"
+  },
+  {
+   "i": 5,
+   "state": null,
+   "tag": "send",
+   "text": "[dry-run] would pulse START on BCM27 for 0.25s"
+  },
+  {
+   "i": 6,
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "raw": "001_PLATE01-A1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "raw": "002_PLATE01-B1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "raw": "003_PLATE01-C1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "raw": null,
+      "started": 0
+     }
+    ]
+   },
+   "tag": "recv",
+   "text": "003_PLATE01-C1.raw.stub"
+  },
+  {
+   "i": 7,
+   "state": null,
+   "tag": "send",
+   "text": "[dry-run] would pulse START on BCM27 for 0.25s"
+  },
+  {
+   "i": 8,
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "raw": "001_PLATE01-A1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "raw": "002_PLATE01-B1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "raw": "003_PLATE01-C1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "raw": "004_PLATE01-D1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "raw": null,
+      "started": 0
+     }
+    ]
+   },
+   "tag": "recv",
+   "text": "004_PLATE01-D1.raw.stub"
+  },
+  {
+   "i": 9,
+   "state": null,
+   "tag": "send",
+   "text": "[dry-run] would pulse START on BCM27 for 0.25s"
+  },
+  {
+   "i": 10,
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "raw": "001_PLATE01-A1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "raw": "002_PLATE01-B1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "raw": "003_PLATE01-C1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "raw": "004_PLATE01-D1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "raw": "005_PLATE01-E1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "raw": null,
+      "started": 0
+     }
+    ]
+   },
+   "tag": "recv",
+   "text": "005_PLATE01-E1.raw.stub"
+  },
+  {
+   "i": 11,
+   "state": null,
+   "tag": "send",
+   "text": "[dry-run] would pulse START on BCM27 for 0.25s"
+  },
+  {
+   "i": 12,
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "raw": "001_PLATE01-A1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "raw": "002_PLATE01-B1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "raw": "003_PLATE01-C1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "raw": "004_PLATE01-D1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "raw": "005_PLATE01-E1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "raw": "006_PLATE01-F1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "raw": null,
+      "started": 0
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "raw": null,
+      "started": 0
+     }
+    ]
+   },
+   "tag": "recv",
+   "text": "006_PLATE01-F1.raw.stub"
+  },
+  {
+   "i": 13,
+   "state": null,
+   "tag": "send",
+   "text": "[dry-run] would pulse START on BCM27 for 0.25s"
+  },
+  {
+   "i": 14,
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "raw": "001_PLATE01-A1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "raw": "002_PLATE01-B1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "raw": "003_PLATE01-C1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "raw": "004_PLATE01-D1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "raw": "005_PLATE01-E1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "raw": "006_PLATE01-F1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "raw": "007_PLATE01-G1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "raw": null,
+      "started": 0
+     }
+    ]
+   },
+   "tag": "recv",
+   "text": "007_PLATE01-G1.raw.stub"
+  },
+  {
+   "i": 15,
+   "state": null,
+   "tag": "send",
+   "text": "[dry-run] would pulse START on BCM27 for 0.25s"
+  },
+  {
+   "i": 16,
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "raw": "001_PLATE01-A1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "raw": "002_PLATE01-B1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "raw": "003_PLATE01-C1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "raw": "004_PLATE01-D1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "raw": "005_PLATE01-E1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "raw": "006_PLATE01-F1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "raw": "007_PLATE01-G1.raw.stub",
+      "started": 1
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "raw": "008_PLATE01-H1.raw.stub",
+      "started": 1
+     }
+    ]
+   },
+   "tag": "recv",
+   "text": "008_PLATE01-H1.raw.stub"
+  },
+  {
+   "i": 17,
+   "state": null,
+   "tag": "state",
+   "text": "ready True, rows started 8/8, raw files 8; starts per aliquot max 1"
+  },
+  {
+   "i": 18,
+   "state": null,
+   "tag": "done",
+   "text": "completed: 8/8 injections matched to a raw file"
+  }
+ ]
+}

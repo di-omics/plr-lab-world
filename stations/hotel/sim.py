@@ -5,7 +5,7 @@ not on a shelf, and a pickup is or is not confirmed. This file holds that physic
 clock the scheduler reads, so nothing sleeps. Messages are plain dicts from the scheduler.
 """
 
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 SLOTS = 24
 
@@ -30,6 +30,7 @@ class SimHotel:
     self.shelves: List[Optional[str]] = [None] * SLOTS
     self.pickups = 0
     self.log: Optional[Callable[[str], None]] = None
+    self.scheduler: Optional[Any] = None  # the scheduler driving this hotel sets itself here
 
   def apply(self, cmd: Dict[str, object]) -> Optional[Dict[str, object]]:
     """Carry out 1 command; return the confirmation, or None when it is lost."""

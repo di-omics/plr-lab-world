@@ -54,9 +54,11 @@ class Tap:
                f"temp {s.dm['982'] / 10:.1f} deg C")
 
 
-async def run(fault: str | None = None, log=print) -> dict:
-  """Run the example once, in simulation only."""
+async def run(fault: str | None = None, log=print, watch=None) -> dict:
+  """Run the example once, in simulation only. watch(sim) sees the simulator once, first."""
   sim, clock = SimSTX44(fault=fault), VirtualClock()
+  if watch is not None:
+    watch(sim)
   tap = Tap(sim, log)
   mod = importlib.import_module("pylabrobot.legacy.storage.liconic.liconic_backend")
   fake_time = SimpleNamespace(time=clock.time)
@@ -99,6 +101,8 @@ async def run(fault: str | None = None, log=print) -> dict:
       outcome, evidence = "error", f"DM200={code} {type(e).__name__}: {e}"
   tap.flush()
   for w in caught:
+    if issubclass(w.category, (ResourceWarning, DeprecationWarning, PendingDeprecationWarning)):
+      continue  # interpreter housekeeping, not something the driver said
     log(f"state upstream warning: {w.message}")
   if outcome == "completed":
     back = sim.history == ["shovel", "cassette 1/1", "shovel", "transfer"]

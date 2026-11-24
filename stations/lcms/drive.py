@@ -62,8 +62,8 @@ async def wait_for_raw_file(folder: str, row: int, aliquot: str, sleep=asyncio.s
   return None
 
 
-async def run(fault: str | None = None, log=print) -> dict:
-  """Run the example once, in simulation only."""
+async def run(fault: str | None = None, log=print, watch=None) -> dict:
+  """Run the example once, in simulation only. watch(sim) sees the workstation once, first."""
   notes = _Notes()
   toolkit_log = logging.getLogger("plr_re")
   toolkit_log.addHandler(notes)
@@ -72,6 +72,8 @@ async def run(fault: str | None = None, log=print) -> dict:
     os.mkdir(raw_dir)
     aliquots = write_sequence(os.path.join(tmp, "sequence.csv"))
     station = SimulatedWorkstation(raw_dir, PINS.ready, PINS.start, PINS.stop)
+    if watch is not None:
+      watch(station)
     station.load_sequence(aliquots)
     station.fault = fault
     log(f"ask   run sequence.csv: {len(aliquots)} injections from {PLATE}, 1 start each")

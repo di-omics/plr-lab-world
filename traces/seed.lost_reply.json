@@ -1,0 +1,270 @@
+{
+ "case": "lost_reply",
+ "evidence": "PERI_DISPENSE: Timeout waiting for ACK; not resent (sim ran it 1x), check plate",
+ "name": "Agilent BioTek EL406",
+ "outcome": "hold",
+ "simulated": true,
+ "station": "seed",
+ "steps": [
+  {
+   "i": 0,
+   "state": {
+    "batch_open": false,
+    "columns_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "error": "",
+    "plate": null,
+    "prime_uL": 0.0,
+    "pump": null
+   },
+   "tag": "ask",
+   "text": "set up: FTDI 38400 8N2, TEST_COMM, INIT_STATE, RESET"
+  },
+  {
+   "i": 1,
+   "state": null,
+   "tag": "send",
+   "text": "3 frames, by command: TEST_COMM INIT_STATE RESET"
+  },
+  {
+   "i": 2,
+   "state": null,
+   "tag": "recv",
+   "text": "3 replies, last: 06 01 02 70 00 01 00 00 00 00 8c ff"
+  },
+  {
+   "i": 3,
+   "state": null,
+   "tag": "state",
+   "text": "plate -, batch closed, prime 0 uL, 0 cols at [] uL, err 0x0000"
+  },
+  {
+   "i": 4,
+   "state": null,
+   "tag": "ask",
+   "text": "open a batch for the 384-well plate"
+  },
+  {
+   "i": 5,
+   "state": {
+    "batch_open": true,
+    "columns_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "error": "",
+    "plate": "384 std",
+    "prime_uL": 0.0,
+    "pump": null
+   },
+   "tag": "send",
+   "text": "7 frames, by command: 0x00bf 0x00c1 0x00f2 0x00f4 0x0154 0x0102 0x010a"
+  },
+  {
+   "i": 6,
+   "state": null,
+   "tag": "send",
+   "text": "01 02 8d 00 01 00 00 01 00 6d ff 01"
+  },
+  {
+   "i": 7,
+   "state": null,
+   "tag": "recv",
+   "text": "8 replies, last: 06 01 02 8d 00 01 00 00 00 00 6f ff"
+  },
+  {
+   "i": 8,
+   "state": null,
+   "tag": "state",
+   "text": "plate 384 std, batch open, prime 0 uL, 0 cols at [] uL, err 0x0000"
+  },
+  {
+   "i": 9,
+   "state": null,
+   "tag": "ask",
+   "text": "prime the peristaltic lines, 500 uL"
+  },
+  {
+   "i": 10,
+   "state": {
+    "batch_open": true,
+    "columns_uL": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "error": "",
+    "plate": "384 std",
+    "prime_uL": 500.0,
+    "pump": "peristaltic"
+   },
+   "tag": "send",
+   "text": "1 frames, by command: STATUS_POLL"
+  },
+  {
+   "i": 11,
+   "state": null,
+   "tag": "send",
+   "text": "01 02 90 00 01 00 00 0b 00 67 fe 01 f4 01 00 00 02 01 00 01 00 00"
+  },
+  {
+   "i": 12,
+   "state": null,
+   "tag": "send",
+   "text": "2 frames, by command: STATUS_POLL STATUS_POLL"
+  },
+  {
+   "i": 13,
+   "state": null,
+   "tag": "recv",
+   "text": "4 replies, last: 06 01 02 92 00 01 00 00 09 00 60 ff 00 00 01 00 00 00 00 00 00"
+  },
+  {
+   "i": 14,
+   "state": null,
+   "tag": "state",
+   "text": "plate 384 std, batch open, prime 500 uL, 0 cols at [] uL, err 0x0000"
+  },
+  {
+   "i": 15,
+   "state": null,
+   "tag": "ask",
+   "text": "dispense 40 uL per well, columns 1-24"
+  },
+  {
+   "i": 16,
+   "state": {
+    "batch_open": false,
+    "columns_uL": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "error": "",
+    "plate": "384 std",
+    "prime_uL": 500.0,
+    "pump": "peristaltic"
+   },
+   "tag": "send",
+   "text": "1 frames, by command: STATUS_POLL"
+  },
+  {
+   "i": 17,
+   "state": null,
+   "tag": "send",
+   "text": "01 02 8f 00 01 00 00 18 00 d2 fb 01 28 00 02 00 00 00 4d 01 0a 00 02 ff ff ff 00 00..."
+  },
+  {
+   "i": 18,
+   "state": null,
+   "tag": "send",
+   "text": "2 frames, by command: HOME_MOTORS END_OF_BATCH"
+  },
+  {
+   "i": 19,
+   "state": null,
+   "tag": "recv",
+   "text": "3 replies, last: 06 01 02 8c 00 01 00 00 00 00 70 ff"
+  },
+  {
+   "i": 20,
+   "state": null,
+   "tag": "state",
+   "text": "plate 384 std, batch closed, prime 500 uL, 24 cols at [40] uL, err 0x0000"
+  },
+  {
+   "i": 21,
+   "state": null,
+   "tag": "done",
+   "text": "hold: PERI_DISPENSE: Timeout waiting for ACK; not resent (sim ran it 1x), check plate"
+  }
+ ]
+}

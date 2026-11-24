@@ -24,6 +24,7 @@ class SimLinearTrack:
     self.pos, self.enabled, self.on_zero, self.status, self.error = 0, 0, 0, 0, 0
     self.calls: List[str] = []
     self.pos_moves = 0  # executed set_linear_motor_pos commands
+    self.target: Optional[int] = None  # position of the last accepted set_linear_motor_pos
     self.log: Optional[Callable[[str], None]] = None
     self._hung = threading.Event()
     self._moved = False
@@ -42,6 +43,13 @@ class SimLinearTrack:
     if name.startswith("__"):
       raise AttributeError(name)
     raise SimUnknownCall(f"unknown SDK call {name}")
+
+  def snapshot(self) -> dict:
+    """Track state for a replay, from the SDK calls carried out so far."""
+    return {"pos_mm": round(float(self.pos), 1),
+            "target_mm": None if self.target is None else round(float(self.target), 1),
+            "travel_mm": round(float(self.travel_mm), 1), "enabled": bool(self.enabled),
+            "homed": bool(self.on_zero), "error": self.error, "moves": self.pos_moves}
 
   def release_hung(self) -> None:
     self._hung.set()
@@ -98,6 +106,7 @@ class SimLinearTrack:
     if self.on_zero != 1:
       return self._recv(NOT_INIT)
     self.pos_moves += 1
+    self.target = pos
     if self.fault == "device_error":
       self.pos, self.error = (self.pos + pos) // 2, POSITION_DEVIATION  # stops part way
     else:

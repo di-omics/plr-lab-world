@@ -60,6 +60,16 @@ class SimSTX44:
   replies: list[str] = field(default_factory=list)  # every reply produced (SIMULATED)
   _out: bytes = b""
 
+  def snapshot(self) -> dict:
+    """PLC state for a replay: where the plate is, ready flag, error register, temperature."""
+    place, cassette, position = self.plate, None, None
+    if place and place.startswith("cassette "):
+      m, n = place.split(" ")[1].split("/")
+      place, cassette, position = "cassette", int(m), int(n)
+    return {"plate_at": place, "cassette": cassette, "position": position, "ready": self.ready,
+            "error": "" if self.error_code == "00000" else self.error_code,
+            "temp_c": round(self.dm["982"] / 10, 1)}
+
   # ---- the pylabrobot.io.Serial surface the backend uses (liconic_backend.py:105-136, 292-293)
   async def setup(self) -> None:
     pass

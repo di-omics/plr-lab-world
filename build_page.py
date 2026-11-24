@@ -194,11 +194,11 @@ section{padding-top:64px}.station{margin-top:64px}}
 """
 
 
-def page(stations: list[dict], walk_out: str, walk_passed: int) -> str:
+def page(stations: list[dict], walk_out: str, walk_passed: int, harness_passed: int) -> str:
     total = len(stations)
     count = {k: sum(1 for s in stations if s["status"] == k) for k in STATUS}
     decoded = count["in_plr"] + count["in_plr_legacy"]
-    tests = sum(s["_passed"] for s in stations) + walk_passed
+    tests = sum(s["_passed"] for s in stations) + harness_passed
     rows = "".join(
         f'<tr><td><a href="#{s["key"]}">{esc(s["name"])}</a></td>'
         f'<td>{esc(STATUS[s["status"]])}</td><td>{linked(s["reaches"])}</td>'
@@ -215,6 +215,7 @@ and what does a first run look like.</p>
 <p class="small">Every run on this page is a simulation. Nothing here ran on a physical instrument.
 Built against the public PyLabRobot source at commit
 <a href="{PLR}" target="_blank" rel="noopener">182f92e</a> of 23 Nov 2026.</p>
+<p class="small"><a href="replay.html">Watch each station run in simulation</a></p>
 <p class="small"><button class="plain" id="openall" type="button">Open every detail</button></p>
 </header>
 
@@ -260,6 +261,9 @@ stations with a lost reply and with an instrument error.</p>
 <div class="scroll"><pre><code>uv run pytest                          # all {tests} tests
 uv run python -m stations.star.drive   # 1 station, with its wire traffic
 uv run python -m harness.walk          # 1 plate through all {total}</code></pre></div>
+<p class="small" style="margin-top:14px">To watch the runs step by step, open
+<a href="replay.html">replay.html</a>. It plays the trace files that
+<code>uv run python -m harness.trace</code> records.</p>
 </section>
 
 <section class="station" id="limits">
@@ -305,7 +309,7 @@ def main() -> None:
     code, walk_out, err = sh([sys.executable, "-m", "harness.walk"])
     if code != 0:
         raise SystemExit(f"harness walk exited {code}\n{err}")
-    body = page(stations, walk_out, passed("harness"))
+    body = page(stations, walk_out, passed("harness/test_walk.py"), passed("harness"))
     try:
         body.encode("ascii")
     except UnicodeEncodeError as e:

@@ -1,0 +1,370 @@
+{
+ "station": "lcms",
+ "name": "Shared LC-MS bench",
+ "case": "device_error",
+ "outcome": "error",
+ "evidence": "fixture: fault line high at row 4",
+ "simulated": true,
+ "steps": [
+  {
+   "i": 0,
+   "tag": "state",
+   "text": "start: lcms",
+   "state": {
+    "ready": false,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "started": 0,
+      "raw": null
+     }
+    ]
+   }
+  },
+  {
+   "i": 1,
+   "tag": "ask",
+   "text": "run sequence.csv: 8 injections from PLATE01, 1 start each",
+   "state": null
+  },
+  {
+   "i": 2,
+   "tag": "state",
+   "text": "ready",
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "started": 0,
+      "raw": null
+     }
+    ]
+   }
+  },
+  {
+   "i": 3,
+   "tag": "send",
+   "text": "[dry-run] would pulse START on BCM27 for 0.25s",
+   "state": null
+  },
+  {
+   "i": 4,
+   "tag": "recv",
+   "text": "001_PLATE01-A1.raw.stub",
+   "state": null
+  },
+  {
+   "i": 5,
+   "tag": "state",
+   "text": "row 1 done",
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "started": 1,
+      "raw": "001_PLATE01-A1.raw.stub"
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "started": 0,
+      "raw": null
+     }
+    ]
+   }
+  },
+  {
+   "i": 6,
+   "tag": "send",
+   "text": "[dry-run] would pulse START on BCM27 for 0.25s",
+   "state": null
+  },
+  {
+   "i": 7,
+   "tag": "recv",
+   "text": "002_PLATE01-B1.raw.stub",
+   "state": null
+  },
+  {
+   "i": 8,
+   "tag": "state",
+   "text": "row 2 done",
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "started": 1,
+      "raw": "001_PLATE01-A1.raw.stub"
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "started": 1,
+      "raw": "002_PLATE01-B1.raw.stub"
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "started": 0,
+      "raw": null
+     }
+    ]
+   }
+  },
+  {
+   "i": 9,
+   "tag": "send",
+   "text": "[dry-run] would pulse START on BCM27 for 0.25s",
+   "state": null
+  },
+  {
+   "i": 10,
+   "tag": "recv",
+   "text": "003_PLATE01-C1.raw.stub",
+   "state": null
+  },
+  {
+   "i": 11,
+   "tag": "state",
+   "text": "row 3 done",
+   "state": {
+    "ready": true,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "started": 1,
+      "raw": "001_PLATE01-A1.raw.stub"
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "started": 1,
+      "raw": "002_PLATE01-B1.raw.stub"
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "started": 1,
+      "raw": "003_PLATE01-C1.raw.stub"
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "started": 0,
+      "raw": null
+     }
+    ]
+   }
+  },
+  {
+   "i": 12,
+   "tag": "send",
+   "text": "[dry-run] would pulse START on BCM27 for 0.25s",
+   "state": null
+  },
+  {
+   "i": 13,
+   "tag": "recv",
+   "text": "fault line high",
+   "state": null
+  },
+  {
+   "i": 14,
+   "tag": "state",
+   "text": "fault at row 4",
+   "state": {
+    "ready": false,
+    "rows": [
+     {
+      "aliquot": "PLATE01-A1",
+      "started": 1,
+      "raw": "001_PLATE01-A1.raw.stub"
+     },
+     {
+      "aliquot": "PLATE01-B1",
+      "started": 1,
+      "raw": "002_PLATE01-B1.raw.stub"
+     },
+     {
+      "aliquot": "PLATE01-C1",
+      "started": 1,
+      "raw": "003_PLATE01-C1.raw.stub"
+     },
+     {
+      "aliquot": "PLATE01-D1",
+      "started": 1,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-E1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-F1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-G1",
+      "started": 0,
+      "raw": null
+     },
+     {
+      "aliquot": "PLATE01-H1",
+      "started": 0,
+      "raw": null
+     }
+    ]
+   }
+  },
+  {
+   "i": 15,
+   "tag": "done",
+   "text": "error: fixture: fault line high at row 4",
+   "state": null
+  }
+ ]
+}

@@ -72,6 +72,18 @@ class SimEL406:
   _tx: bytes = b""
   _busy_polls: int = 0
 
+  def snapshot(self) -> dict:
+    """Device state for a replay, from the frames decoded so far. Volumes in uL per well."""
+    err = self.error_code
+    return {
+      "plate": PLATE_TYPES.get(self.plate_type) if self.plate_type is not None else None,
+      "batch_open": self.batch_open,
+      "pump": self.dispenser,
+      "prime_uL": round(float(self.primed_ul), 1),
+      "columns_uL": [round(float(self.column_ul.get(c, 0)), 1) for c in range(1, 25)],
+      "error": f"0x{err:04X} {get_error_message(err)}" if err else "",
+    }
+
   # ---- the pylabrobot.io.FTDI surface the driver uses (el406.py:147-173, 208, 229, 269) ----
   async def setup(self) -> None:
     self.serial["open"] = True

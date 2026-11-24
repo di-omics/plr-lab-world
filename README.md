@@ -1,7 +1,9 @@
-# Reverse engineering the hall
+# plr-lab-world
 
 How software reaches each instrument of a simulated in vitro automation hall, shown with
 PyLabRobot. 9 stations, 1 example each, simulation only.
+
+Open the pages: [how each station is reached](https://di-omics.github.io/plr-lab-world/) and [the replay](https://di-omics.github.io/plr-lab-world/replay.html).
 
 For every station the question is the same: is the instrument already decoded?
 
@@ -44,7 +46,7 @@ it. The format is in `traces/README.md`, so another viewer can play the same run
     index.html                   how each station is reached (opens offline)
     replay.html                  each station running in simulation (opens offline)
 
-Station keys match the 3D hall: culture, seed, star, inc, rail, xarm, hotel, reader, lcms.
+Station keys, in walk order: culture, seed, star, inc, rail, xarm, hotel, reader, lcms.
 
 ## Limits
 
